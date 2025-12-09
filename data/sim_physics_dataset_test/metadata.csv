@@ -1,0 +1,22 @@
+video,prompt,negative_prompt,num_images
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_ball_and_block_fall/env_0/0/0/rgb,A physics simulation of a ball and block falling,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_ball_collide/env_0/0/0/rgb,A physics simulation showing balls colliding,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_ball_hits_duck/env_0/0/0/rgb,A physics simulation of a ball hitting a duck,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_ball_hits_nothing/env_0/0/0/rgb,A physics simulation of a ball moving with no collision,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_ball_in_basket/env_0/0/0/rgb,A physics simulation of a ball going into a basket,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_ball_ramp/env_0/0/0/rgb,A physics simulation of a ball rolling down a ramp,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_ball_rolls_off/env_0/0/0/rgb,A physics simulation of a ball rolling off a surface,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_ball_rolls_on_glass/env_0/0/0/rgb,A physics simulation of a ball rolling on glass,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_ball_train/env_0/0/0/rgb,A physics simulation of multiple balls in sequence,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_block_domino/env_0/0/0/rgb,A physics simulation of blocks falling like dominoes,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_domino_in_juice/env_0/0/0/rgb,A physics simulation of dominoes falling near liquid,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_domino_with_space/env_0/0/0/rgb,A physics simulation of spaced domino pieces,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_duck_and_domino/env_0/0/0/rgb,A physics simulation of a duck and domino interaction,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_duck_falls_in_box/env_0/0/0/rgb,A physics simulation of a duck falling into a box,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_duck_static/env_0/0/0/rgb,A physics simulation of a static duck object,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_light_on_block/env_0/0/0/rgb,A physics simulation showing lighting effects on a block,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_light_on_mug/env_0/0/0/rgb,A physics simulation showing lighting effects on a mug,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_light_on_mug_block/env_0/0/0/rgb,A physics simulation showing lighting on a mug and block,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_light_on_sculpture/env_0/0/0/rgb,A physics simulation showing lighting on a sculpture,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_roll_behind_box/env_0/0/0/rgb,A physics simulation of an object rolling behind a box,,199
+/nyx-storage1/hanliu/Sim_Physics/TestOutput/test_roll_front_box/env_0/0/0/rgb,A physics simulation of an object rolling in front of a box,,199

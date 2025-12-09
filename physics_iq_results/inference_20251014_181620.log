@@ -1,0 +1,255 @@
+================================================================
+Physics-IQ WAN2.2 Inference Log
+Started at: Tue Oct 14 18:16:20 CDT 2025
+================================================================
+Command: python inference_physics_iq_wan22.py --output_dir physics_iq_results --model_name wan22 --height 480 --width 832 --num_frames 81 --fps 16 --cfg_scale 7.0 --num_inference_steps 50 --seed 42 --device cuda
+================================================================
+
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/transformers/utils/hub.py:111: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+============================================================
+Physics-IQ WAN2.2 Inference Pipeline
+============================================================
+
+Configuration:
+  height: 480
+  width: 832
+  num_frames: 81
+  cfg_scale: 7.0
+  num_inference_steps: 50
+  fps: 16
+  seed: 42
+  quality: 5
+  tiled: True
+  resize_input: False
+  negative_prompt: blurry, low quality, distorted, static image, cartoon, animation
+
+Loading data from:
+  Images: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames
+  Descriptions: /nyx-storage1/hanliu/physics-IQ-benchmark/descriptions/descriptions.csv
+Warning: No image found for scenario 0199_perspective-left_take-2_trimmed-ball-and-block-fall.mp4
+Warning: No image found for scenario 0200_perspective-center_take-2_trimmed-ball-and-block-fall.mp4
+Warning: No image found for scenario 0201_perspective-right_take-2_trimmed-ball-and-block-fall.mp4
+Warning: No image found for scenario 0202_perspective-left_take-2_trimmed-ball-behind-rotating-paper.mp4
+Warning: No image found for scenario 0203_perspective-center_take-2_trimmed-ball-behind-rotating-paper.mp4
+Warning: No image found for scenario 0204_perspective-right_take-2_trimmed-ball-behind-rotating-paper.mp4
+Warning: No image found for scenario 0205_perspective-left_take-2_trimmed-ball-hits-duck.mp4
+Warning: No image found for scenario 0206_perspective-center_take-2_trimmed-ball-hits-duck.mp4
+Warning: No image found for scenario 0207_perspective-right_take-2_trimmed-ball-hits-duck.mp4
+Warning: No image found for scenario 0208_perspective-left_take-2_trimmed-ball-hits-nothing.mp4
+Warning: No image found for scenario 0209_perspective-center_take-2_trimmed-ball-hits-nothing.mp4
+Warning: No image found for scenario 0210_perspective-right_take-2_trimmed-ball-hits-nothing.mp4
+Warning: No image found for scenario 0211_perspective-left_take-2_trimmed-ball-in-basket.mp4
+Warning: No image found for scenario 0212_perspective-center_take-2_trimmed-ball-in-basket.mp4
+Warning: No image found for scenario 0213_perspective-right_take-2_trimmed-ball-in-basket.mp4
+Warning: No image found for scenario 0214_perspective-left_take-2_trimmed-ball-in-sand.mp4
+Warning: No image found for scenario 0215_perspective-center_take-2_trimmed-ball-in-sand.mp4
+Warning: No image found for scenario 0216_perspective-right_take-2_trimmed-ball-in-sand.mp4
+Warning: No image found for scenario 0217_perspective-left_take-2_trimmed-ball-ramp.mp4
+Warning: No image found for scenario 0218_perspective-center_take-2_trimmed-ball-ramp.mp4
+Warning: No image found for scenario 0219_perspective-right_take-2_trimmed-ball-ramp.mp4
+Warning: No image found for scenario 0220_perspective-left_take-2_trimmed-ball-rolls-off.mp4
+Warning: No image found for scenario 0221_perspective-center_take-2_trimmed-ball-rolls-off.mp4
+Warning: No image found for scenario 0222_perspective-right_take-2_trimmed-ball-rolls-off.mp4
+Warning: No image found for scenario 0223_perspective-left_take-2_trimmed-ball-rolls-on-glass.mp4
+Warning: No image found for scenario 0224_perspective-center_take-2_trimmed-ball-rolls-on-glass.mp4
+Warning: No image found for scenario 0225_perspective-right_take-2_trimmed-ball-rolls-on-glass.mp4
+Warning: No image found for scenario 0226_perspective-left_take-2_trimmed-ball-train.mp4
+Warning: No image found for scenario 0227_perspective-center_take-2_trimmed-ball-train.mp4
+Warning: No image found for scenario 0228_perspective-right_take-2_trimmed-ball-train.mp4
+Warning: No image found for scenario 0229_perspective-left_take-2_trimmed-balls-collide.mp4
+Warning: No image found for scenario 0230_perspective-center_take-2_trimmed-balls-collide.mp4
+Warning: No image found for scenario 0231_perspective-right_take-2_trimmed-balls-collide.mp4
+Warning: No image found for scenario 0232_perspective-left_take-2_trimmed-block-domino.mp4
+Warning: No image found for scenario 0233_perspective-center_take-2_trimmed-block-domino.mp4
+Warning: No image found for scenario 0234_perspective-right_take-2_trimmed-block-domino.mp4
+Warning: No image found for scenario 0235_perspective-left_take-2_trimmed-blow-balloon.mp4
+Warning: No image found for scenario 0236_perspective-center_take-2_trimmed-blow-balloon.mp4
+Warning: No image found for scenario 0237_perspective-right_take-2_trimmed-blow-balloon.mp4
+Warning: No image found for scenario 0238_perspective-left_take-2_trimmed-cut-orange.mp4
+Warning: No image found for scenario 0239_perspective-center_take-2_trimmed-cut-orange.mp4
+Warning: No image found for scenario 0240_perspective-right_take-2_trimmed-cut-orange.mp4
+Warning: No image found for scenario 0241_perspective-left_take-2_trimmed-cut-paper.mp4
+Warning: No image found for scenario 0242_perspective-center_take-2_trimmed-cut-paper.mp4
+Warning: No image found for scenario 0243_perspective-right_take-2_trimmed-cut-paper.mp4
+Warning: No image found for scenario 0244_perspective-left_take-2_trimmed-domino-in-juice.mp4
+Warning: No image found for scenario 0245_perspective-center_take-2_trimmed-domino-in-juice.mp4
+Warning: No image found for scenario 0246_perspective-right_take-2_trimmed-domino-in-juice.mp4
+Warning: No image found for scenario 0247_perspective-left_take-2_trimmed-dominos-with-space.mp4
+Warning: No image found for scenario 0248_perspective-center_take-2_trimmed-dominos-with-space.mp4
+Warning: No image found for scenario 0249_perspective-right_take-2_trimmed-dominos-with-space.mp4
+Warning: No image found for scenario 0250_perspective-left_take-2_trimmed-double-cradle.mp4
+Warning: No image found for scenario 0251_perspective-center_take-2_trimmed-double-cradle.mp4
+Warning: No image found for scenario 0252_perspective-right_take-2_trimmed-double-cradle.mp4
+Warning: No image found for scenario 0253_perspective-left_take-2_trimmed-duck-and-dominos.mp4
+Warning: No image found for scenario 0254_perspective-center_take-2_trimmed-duck-and-dominos.mp4
+Warning: No image found for scenario 0255_perspective-right_take-2_trimmed-duck-and-dominos.mp4
+Warning: No image found for scenario 0256_perspective-left_take-2_trimmed-duck-falls-in-box.mp4
+Warning: No image found for scenario 0257_perspective-center_take-2_trimmed-duck-falls-in-box.mp4
+Warning: No image found for scenario 0258_perspective-right_take-2_trimmed-duck-falls-in-box.mp4
+Warning: No image found for scenario 0259_perspective-left_take-2_trimmed-duck-static.mp4
+Warning: No image found for scenario 0260_perspective-center_take-2_trimmed-duck-static.mp4
+Warning: No image found for scenario 0261_perspective-right_take-2_trimmed-duck-static.mp4
+Warning: No image found for scenario 0262_perspective-left_take-2_trimmed-fill-glass-red-drink.mp4
+Warning: No image found for scenario 0263_perspective-center_take-2_trimmed-fill-glass-red-drink.mp4
+Warning: No image found for scenario 0264_perspective-right_take-2_trimmed-fill-glass-red-drink.mp4
+Warning: No image found for scenario 0265_perspective-left_take-2_trimmed-glass-stays-same.mp4
+Warning: No image found for scenario 0266_perspective-center_take-2_trimmed-glass-stays-same.mp4
+Warning: No image found for scenario 0267_perspective-right_take-2_trimmed-glass-stays-same.mp4
+Warning: No image found for scenario 0268_perspective-left_take-2_trimmed-juice-in-water.mp4
+Warning: No image found for scenario 0269_perspective-center_take-2_trimmed-juice-in-water.mp4
+Warning: No image found for scenario 0270_perspective-right_take-2_trimmed-juice-in-water.mp4
+Warning: No image found for scenario 0271_perspective-left_take-2_trimmed-light-on-block.mp4
+Warning: No image found for scenario 0272_perspective-center_take-2_trimmed-light-on-block.mp4
+Warning: No image found for scenario 0273_perspective-right_take-2_trimmed-light-on-block.mp4
+Warning: No image found for scenario 0274_perspective-left_take-2_trimmed-light-on-mug.mp4
+Warning: No image found for scenario 0275_perspective-center_take-2_trimmed-light-on-mug.mp4
+Warning: No image found for scenario 0276_perspective-right_take-2_trimmed-light-on-mug.mp4
+Warning: No image found for scenario 0277_perspective-left_take-2_trimmed-light-on-mug-block.mp4
+Warning: No image found for scenario 0278_perspective-center_take-2_trimmed-light-on-mug-block.mp4
+Warning: No image found for scenario 0279_perspective-right_take-2_trimmed-light-on-mug-block.mp4
+Warning: No image found for scenario 0280_perspective-left_take-2_trimmed-light-on-statue.mp4
+Warning: No image found for scenario 0281_perspective-center_take-2_trimmed-light-on-statue.mp4
+Warning: No image found for scenario 0282_perspective-right_take-2_trimmed-light-on-statue.mp4
+Warning: No image found for scenario 0283_perspective-left_take-2_trimmed-liquid-on-duck.mp4
+Warning: No image found for scenario 0284_perspective-center_take-2_trimmed-liquid-on-duck.mp4
+Warning: No image found for scenario 0285_perspective-right_take-2_trimmed-liquid-on-duck.mp4
+Warning: No image found for scenario 0286_perspective-left_take-2_trimmed-liquid-overfill.mp4
+Warning: No image found for scenario 0287_perspective-center_take-2_trimmed-liquid-overfill.mp4
+Warning: No image found for scenario 0288_perspective-right_take-2_trimmed-liquid-overfill.mp4
+Warning: No image found for scenario 0289_perspective-left_take-2_trimmed-lit-candle.mp4
+Warning: No image found for scenario 0290_perspective-center_take-2_trimmed-lit-candle.mp4
+Warning: No image found for scenario 0291_perspective-right_take-2_trimmed-lit-candle.mp4
+Warning: No image found for scenario 0292_perspective-left_take-2_trimmed-magnet-domino.mp4
+Warning: No image found for scenario 0293_perspective-center_take-2_trimmed-magnet-domino.mp4
+Warning: No image found for scenario 0294_perspective-right_take-2_trimmed-magnet-domino.mp4
+Warning: No image found for scenario 0295_perspective-left_take-2_trimmed-magnet-transparent-peakaboo.mp4
+Warning: No image found for scenario 0296_perspective-center_take-2_trimmed-magnet-transparent-peakaboo.mp4
+Warning: No image found for scenario 0297_perspective-right_take-2_trimmed-magnet-transparent-peakaboo.mp4
+Warning: No image found for scenario 0298_perspective-left_take-2_trimmed-magnet-wrench.mp4
+Warning: No image found for scenario 0299_perspective-center_take-2_trimmed-magnet-wrench.mp4
+Warning: No image found for scenario 0300_perspective-right_take-2_trimmed-magnet-wrench.mp4
+Warning: No image found for scenario 0301_perspective-left_take-2_trimmed-marble-run-x.mp4
+Warning: No image found for scenario 0302_perspective-center_take-2_trimmed-marble-run-x.mp4
+Warning: No image found for scenario 0303_perspective-right_take-2_trimmed-marble-run-x.mp4
+Warning: No image found for scenario 0304_perspective-left_take-2_trimmed-marble-run-y.mp4
+Warning: No image found for scenario 0305_perspective-center_take-2_trimmed-marble-run-y.mp4
+Warning: No image found for scenario 0306_perspective-right_take-2_trimmed-marble-run-y.mp4
+Warning: No image found for scenario 0307_perspective-left_take-2_trimmed-match.mp4
+Warning: No image found for scenario 0308_perspective-center_take-2_trimmed-match.mp4
+Warning: No image found for scenario 0309_perspective-right_take-2_trimmed-match.mp4
+Warning: No image found for scenario 0310_perspective-left_take-2_trimmed-match-blows-balloon.mp4
+Warning: No image found for scenario 0311_perspective-center_take-2_trimmed-match-blows-balloon.mp4
+Warning: No image found for scenario 0312_perspective-right_take-2_trimmed-match-blows-balloon.mp4
+Warning: No image found for scenario 0313_perspective-left_take-2_trimmed-mirror-ball-fall.mp4
+Warning: No image found for scenario 0314_perspective-center_take-2_trimmed-mirror-ball-fall.mp4
+Warning: No image found for scenario 0315_perspective-right_take-2_trimmed-mirror-ball-fall.mp4
+Warning: No image found for scenario 0316_perspective-left_take-2_trimmed-mirror-ball-rotate.mp4
+Warning: No image found for scenario 0317_perspective-center_take-2_trimmed-mirror-ball-rotate.mp4
+Warning: No image found for scenario 0318_perspective-right_take-2_trimmed-mirror-ball-rotate.mp4
+Warning: No image found for scenario 0319_perspective-left_take-2_trimmed-mirror-teapot-rotate.mp4
+Warning: No image found for scenario 0320_perspective-center_take-2_trimmed-mirror-teapot-rotate.mp4
+Warning: No image found for scenario 0321_perspective-right_take-2_trimmed-mirror-teapot-rotate.mp4
+Warning: No image found for scenario 0322_perspective-left_take-2_trimmed-mug-breaks.mp4
+Warning: No image found for scenario 0323_perspective-center_take-2_trimmed-mug-breaks.mp4
+Warning: No image found for scenario 0324_perspective-right_take-2_trimmed-mug-breaks.mp4
+Warning: No image found for scenario 0325_perspective-left_take-2_trimmed-napkin-soak.mp4
+Warning: No image found for scenario 0326_perspective-center_take-2_trimmed-napkin-soak.mp4
+Warning: No image found for scenario 0327_perspective-right_take-2_trimmed-napkin-soak.mp4
+Warning: No image found for scenario 0328_perspective-left_take-2_trimmed-paint-on-glass.mp4
+Warning: No image found for scenario 0329_perspective-center_take-2_trimmed-paint-on-glass.mp4
+Warning: No image found for scenario 0330_perspective-right_take-2_trimmed-paint-on-glass.mp4
+Warning: No image found for scenario 0331_perspective-left_take-2_trimmed-paper-fall-water.mp4
+Warning: No image found for scenario 0332_perspective-center_take-2_trimmed-paper-fall-water.mp4
+Warning: No image found for scenario 0333_perspective-right_take-2_trimmed-paper-fall-water.mp4
+Warning: No image found for scenario 0334_perspective-left_take-2_trimmed-paper-in-water.mp4
+Warning: No image found for scenario 0335_perspective-center_take-2_trimmed-paper-in-water.mp4
+Warning: No image found for scenario 0336_perspective-right_take-2_trimmed-paper-in-water.mp4
+Warning: No image found for scenario 0337_perspective-left_take-2_trimmed-paper-smoke.mp4
+Warning: No image found for scenario 0338_perspective-center_take-2_trimmed-paper-smoke.mp4
+Warning: No image found for scenario 0339_perspective-right_take-2_trimmed-paper-smoke.mp4
+Warning: No image found for scenario 0340_perspective-left_take-2_trimmed-potato-in-water.mp4
+Warning: No image found for scenario 0341_perspective-center_take-2_trimmed-potato-in-water.mp4
+Warning: No image found for scenario 0342_perspective-right_take-2_trimmed-potato-in-water.mp4
+Warning: No image found for scenario 0343_perspective-left_take-2_trimmed-roll-behind-box.mp4
+Warning: No image found for scenario 0344_perspective-center_take-2_trimmed-roll-behind-box.mp4
+Warning: No image found for scenario 0345_perspective-right_take-2_trimmed-roll-behind-box.mp4
+Warning: No image found for scenario 0346_perspective-left_take-2_trimmed-roll-front-box.mp4
+Warning: No image found for scenario 0347_perspective-center_take-2_trimmed-roll-front-box.mp4
+Warning: No image found for scenario 0348_perspective-right_take-2_trimmed-roll-front-box.mp4
+Warning: No image found for scenario 0349_perspective-left_take-2_trimmed-roll-in-box.mp4
+Warning: No image found for scenario 0350_perspective-center_take-2_trimmed-roll-in-box.mp4
+Warning: No image found for scenario 0351_perspective-right_take-2_trimmed-roll-in-box.mp4
+Warning: No image found for scenario 0352_perspective-left_take-2_trimmed-rolling-reflection.mp4
+Warning: No image found for scenario 0353_perspective-center_take-2_trimmed-rolling-reflection.mp4
+Warning: No image found for scenario 0354_perspective-right_take-2_trimmed-rolling-reflection.mp4
+Warning: No image found for scenario 0355_perspective-left_take-2_trimmed-silk-cover.mp4
+Warning: No image found for scenario 0356_perspective-center_take-2_trimmed-silk-cover.mp4
+Warning: No image found for scenario 0357_perspective-right_take-2_trimmed-silk-cover.mp4
+Warning: No image found for scenario 0358_perspective-left_take-2_trimmed-single-cradle.mp4
+Warning: No image found for scenario 0359_perspective-center_take-2_trimmed-single-cradle.mp4
+Warning: No image found for scenario 0360_perspective-right_take-2_trimmed-single-cradle.mp4
+Warning: No image found for scenario 0361_perspective-left_take-2_trimmed-siphon.mp4
+Warning: No image found for scenario 0362_perspective-center_take-2_trimmed-siphon.mp4
+Warning: No image found for scenario 0363_perspective-right_take-2_trimmed-siphon.mp4
+Warning: No image found for scenario 0364_perspective-left_take-2_trimmed-smiley-ball-rotates.mp4
+Warning: No image found for scenario 0365_perspective-center_take-2_trimmed-smiley-ball-rotates.mp4
+2025-10-14 18:16:26,181 - modelscope - WARNING - Repo Wan-AI/Wan2.2-T2V-1.3B not exists on https://www.modelscope.cn, will try on alternative endpoint https://www.modelscope.ai.
+2025-10-14 18:16:27,487 - modelscope - ERROR - Repo Wan-AI/Wan2.2-T2V-1.3B not exists on either https://www.modelscope.cn or https://www.modelscope.ai
+Warning: No image found for scenario 0366_perspective-right_take-2_trimmed-smiley-ball-rotates.mp4
+Warning: No image found for scenario 0367_perspective-left_take-2_trimmed-solid-ball-peakaboo.mp4
+Warning: No image found for scenario 0368_perspective-center_take-2_trimmed-solid-ball-peakaboo.mp4
+Warning: No image found for scenario 0369_perspective-right_take-2_trimmed-solid-ball-peakaboo.mp4
+Warning: No image found for scenario 0370_perspective-left_take-2_trimmed-stable-blocks.mp4
+Warning: No image found for scenario 0371_perspective-center_take-2_trimmed-stable-blocks.mp4
+Warning: No image found for scenario 0372_perspective-right_take-2_trimmed-stable-blocks.mp4
+Warning: No image found for scenario 0373_perspective-left_take-2_trimmed-teapot-rotates.mp4
+Warning: No image found for scenario 0374_perspective-center_take-2_trimmed-teapot-rotates.mp4
+Warning: No image found for scenario 0375_perspective-right_take-2_trimmed-teapot-rotates.mp4
+Warning: No image found for scenario 0376_perspective-left_take-2_trimmed-two-balls-pass.mp4
+Warning: No image found for scenario 0377_perspective-center_take-2_trimmed-two-balls-pass.mp4
+Warning: No image found for scenario 0378_perspective-right_take-2_trimmed-two-balls-pass.mp4
+Warning: No image found for scenario 0379_perspective-left_take-2_trimmed-unstable-block-stack.mp4
+Warning: No image found for scenario 0380_perspective-center_take-2_trimmed-unstable-block-stack.mp4
+Warning: No image found for scenario 0381_perspective-right_take-2_trimmed-unstable-block-stack.mp4
+Warning: No image found for scenario 0382_perspective-left_take-2_trimmed-water-in-juice.mp4
+Warning: No image found for scenario 0383_perspective-center_take-2_trimmed-water-in-juice.mp4
+Warning: No image found for scenario 0384_perspective-right_take-2_trimmed-water-in-juice.mp4
+Warning: No image found for scenario 0385_perspective-left_take-2_trimmed-weight-on-ceramic.mp4
+Warning: No image found for scenario 0386_perspective-center_take-2_trimmed-weight-on-ceramic.mp4
+Warning: No image found for scenario 0387_perspective-right_take-2_trimmed-weight-on-ceramic.mp4
+Warning: No image found for scenario 0388_perspective-left_take-2_trimmed-weight-on-paper.mp4
+Warning: No image found for scenario 0389_perspective-center_take-2_trimmed-weight-on-paper.mp4
+Warning: No image found for scenario 0390_perspective-right_take-2_trimmed-weight-on-paper.mp4
+Warning: No image found for scenario 0391_perspective-left_take-2_trimmed-weight-on-pillow.mp4
+Warning: No image found for scenario 0392_perspective-center_take-2_trimmed-weight-on-pillow.mp4
+Warning: No image found for scenario 0393_perspective-right_take-2_trimmed-weight-on-pillow.mp4
+Warning: No image found for scenario 0394_perspective-left_take-2_trimmed-weight-protects-duck.mp4
+Warning: No image found for scenario 0395_perspective-center_take-2_trimmed-weight-protects-duck.mp4
+Warning: No image found for scenario 0396_perspective-right_take-2_trimmed-weight-protects-duck.mp4
+
+Found 198 valid samples to process
+Loading WAN2.2-T2V-1.3B model...
+To avoid repeatedly downloading model files, (Wan-AI/Wan2.2-T2V-1.3B, models_t5_umt5-xxl-enc-bf16.pth) is redirected to (Wan-AI/Wan2.1-T2V-1.3B, models_t5_umt5-xxl-enc-bf16.pth). You can use `redirect_common_files=False` to disable file redirection.
+Traceback (most recent call last):
+  File "/home/mzh1800/DiffSynth-Studio/inference_physics_iq_wan22.py", line 305, in <module>
+    main()
+  File "/home/mzh1800/DiffSynth-Studio/inference_physics_iq_wan22.py", line 269, in main
+    pipe = load_wan22_pipeline(device=args.device)
+  File "/home/mzh1800/DiffSynth-Studio/inference_physics_iq_wan22.py", line 86, in load_wan22_pipeline
+    pipe = WanVideoPipeline.from_pretrained(
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/pipelines/wan_video_new.py", line 344, in from_pretrained
+    model_config.download_if_necessary(use_usp=use_usp)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/utils/__init__.py", line 199, in download_if_necessary
+    snapshot_download(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/snapshot_download.py", line 132, in snapshot_download
+    return _snapshot_download(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/snapshot_download.py", line 300, in _snapshot_download
+    endpoint = _api.get_endpoint_for_read(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/api.py", line 515, in get_endpoint_for_read
+    self.repo_exists(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/api.py", line 673, in repo_exists
+    raise HTTPError(r)
+requests.exceptions.HTTPError: <Response [404]>

@@ -1,0 +1,58 @@
+================================================================
+Physics-IQ WAN2.2 Inference Log
+Started at: Tue Oct 14 19:24:51 CDT 2025
+================================================================
+Command: python inference_physics_iq_wan22.py --output_dir physics_iq_results --model_name wan22 --height 480 --width 832 --num_frames 81 --fps 16 --cfg_scale 7.0 --num_inference_steps 50 --seed 42 --device cuda
+================================================================
+
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/transformers/utils/hub.py:111: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+2025-10-14 19:24:56,479 - modelscope - WARNING - Repo Wan-AI/Wan2.2-T2V-1.3B not exists on https://www.modelscope.cn, will try on alternative endpoint https://www.modelscope.ai.
+2025-10-14 19:24:57,660 - modelscope - ERROR - Repo Wan-AI/Wan2.2-T2V-1.3B not exists on either https://www.modelscope.cn or https://www.modelscope.ai
+============================================================
+Physics-IQ WAN2.2 Inference Pipeline
+============================================================
+
+Configuration:
+  height: 480
+  width: 832
+  num_frames: 81
+  cfg_scale: 7.0
+  num_inference_steps: 50
+  fps: 16
+  seed: 42
+  quality: 5
+  tiled: True
+  resize_input: False
+  negative_prompt: blurry, low quality, distorted, static image, cartoon, animation
+
+Loading data from:
+  Images: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames
+  Descriptions: /nyx-storage1/hanliu/physics-IQ-benchmark/descriptions/descriptions.csv
+
+Found 198 valid samples with switch-frame images to process
+(Note: Only scenarios 0001-0198 have switch-frame images available)
+Loading WAN2.2-T2V-1.3B model...
+To avoid repeatedly downloading model files, (Wan-AI/Wan2.2-T2V-1.3B, models_t5_umt5-xxl-enc-bf16.pth) is redirected to (Wan-AI/Wan2.1-T2V-1.3B, models_t5_umt5-xxl-enc-bf16.pth). You can use `redirect_common_files=False` to disable file redirection.
+Traceback (most recent call last):
+  File "/home/mzh1800/DiffSynth-Studio/inference_physics_iq_wan22.py", line 306, in <module>
+    main()
+  File "/home/mzh1800/DiffSynth-Studio/inference_physics_iq_wan22.py", line 270, in main
+    pipe = load_wan22_pipeline(device=args.device)
+  File "/home/mzh1800/DiffSynth-Studio/inference_physics_iq_wan22.py", line 86, in load_wan22_pipeline
+    pipe = WanVideoPipeline.from_pretrained(
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/pipelines/wan_video_new.py", line 344, in from_pretrained
+    model_config.download_if_necessary(use_usp=use_usp)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/utils/__init__.py", line 199, in download_if_necessary
+    snapshot_download(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/snapshot_download.py", line 132, in snapshot_download
+    return _snapshot_download(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/snapshot_download.py", line 300, in _snapshot_download
+    endpoint = _api.get_endpoint_for_read(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/api.py", line 515, in get_endpoint_for_read
+    self.repo_exists(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/api.py", line 673, in repo_exists
+    raise HTTPError(r)
+requests.exceptions.HTTPError: <Response [404]>

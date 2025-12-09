@@ -1,0 +1,62 @@
+================================================================
+PhyGenBench WAN2.2-T2V-5B Inference Log
+Started at: Wed Oct 15 02:10:42 CDT 2025
+================================================================
+Command: python inference_phygenbench_wan22.py --prompts_json phygenbench_prompts.json --output_dir phygenbench_results --model_name wan22_t2v_5b --height 480 --width 832 --num_frames 81 --fps 16 --cfg_scale 7.0 --num_inference_steps 50 --seed 42 --device cuda --shard_index 2 --num_shards 4
+================================================================
+
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/transformers/utils/hub.py:111: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+2025-10-15 02:10:49,312 - modelscope - INFO - Target directory already exists, skipping creation.
+2025-10-15 02:11:12,393 - modelscope - WARNING - Repo Wan-AI/Wan2.2-T2V-5B not exists on https://www.modelscope.cn, will try on alternative endpoint https://www.modelscope.ai.
+2025-10-15 02:11:13,345 - modelscope - ERROR - Repo Wan-AI/Wan2.2-T2V-5B not exists on either https://www.modelscope.cn or https://www.modelscope.ai
+============================================================
+PhyGenBench Wan2.2-T2V-5B Inference Pipeline
+============================================================
+
+Configuration:
+  height: 480
+  width: 832
+  num_frames: 81
+  cfg_scale: 7.0
+  num_inference_steps: 50
+  fps: 16
+  seed: 42
+  quality: 5
+  tiled: True
+  negative_prompt: blurry, low quality, distorted, static image, cartoon, animation
+
+Loading prompts from: phygenbench_prompts.json
+
+Found 160 prompts to process
+
+🔀 Shard 2/4: Processing samples 80 to 119 (40 samples)
+[cuda] Loading Wan2.2-T2V-5B model from local checkpoints...
+[cuda] Using local checkpoint files from: /nyx-storage1/hanliu/world_model_ckpt
+To avoid repeatedly downloading model files, (Wan-AI/Wan2.2-T2V-5B, models_t5_umt5-xxl-enc-bf16.pth) is redirected to (Wan-AI/Wan2.1-T2V-1.3B, models_t5_umt5-xxl-enc-bf16.pth). You can use `redirect_common_files=False` to disable file redirection.
+Downloading Model from https://www.modelscope.cn to directory: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B/models_t5_umt5-xxl-enc-bf16.pth
+    model_name: wan_video_text_encoder model_class: WanTextEncoder
+    The following models are loaded: ['wan_video_text_encoder'].
+Traceback (most recent call last):
+  File "/home/mzh1800/DiffSynth-Studio/inference_phygenbench_wan22.py", line 298, in <module>
+    main()
+  File "/home/mzh1800/DiffSynth-Studio/inference_phygenbench_wan22.py", line 264, in main
+    pipe = load_wan22_pipeline(device=args.device)
+  File "/home/mzh1800/DiffSynth-Studio/inference_phygenbench_wan22.py", line 56, in load_wan22_pipeline
+    pipe = WanVideoPipeline.from_pretrained(
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/pipelines/wan_video_new.py", line 344, in from_pretrained
+    model_config.download_if_necessary(use_usp=use_usp)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/utils/__init__.py", line 199, in download_if_necessary
+    snapshot_download(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/snapshot_download.py", line 132, in snapshot_download
+    return _snapshot_download(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/snapshot_download.py", line 300, in _snapshot_download
+    endpoint = _api.get_endpoint_for_read(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/api.py", line 515, in get_endpoint_for_read
+    self.repo_exists(
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/modelscope/hub/api.py", line 673, in repo_exists
+    raise HTTPError(r)
+requests.exceptions.HTTPError: <Response [404]>

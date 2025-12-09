@@ -1,0 +1,18 @@
+==================================================
+Wandb initialized successfully!
+  Project: Sim4Videos
+  Run name: motion_only
+[34m[1mwandb[0m: [33mWARNING[0m The get_url method is deprecated and will be removed in a future release. Please use `run.url` instead.
+  Run URL: https://wandb.ai/magicslabnorthwestern/Sim4Videos/runs/34se84f9
+  Log every 10 steps
+==================================================
+Epoch 1/5:  19%|▉    | 99/525 [15:33<1:06:24,  9.35s/it, loss=0.0492, noise=0.0227, motion=0.0337, depth=0.0000]/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py:4807: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user.
+[Step 10] Logged to wandb: total=0.0277, noise=0.0146, motion=0.0664, depth=0.0000
+[Step 20] Logged to wandb: total=0.0243, noise=0.0241, motion=0.0615, depth=0.0000
+[Step 30] Logged to wandb: total=0.0321, noise=0.0153, motion=0.0481, depth=0.0000
+  warnings.warn(  # warn only once
+Epoch 1/5: 100%|████| 525/525 [1:22:19<00:00,  9.41s/it, loss=0.0294, noise=0.0154, motion=0.0161, depth=0.0000]
+Epoch 2/5: 100%|████| 525/525 [1:22:10<00:00,  9.39s/it, loss=0.0106, noise=0.3388, motion=0.0183, depth=0.0000]
+Epoch 3/5: 100%|████| 525/525 [1:22:25<00:00,  9.42s/it, loss=0.0176, noise=0.0248, motion=0.0079, depth=0.0000]
+Epoch 4/5: 100%|████| 525/525 [1:22:18<00:00,  9.41s/it, loss=0.0849, noise=0.4355, motion=0.0332, depth=0.0000]
+Epoch 5/5: 100%|████| 525/525 [1:22:15<00:00,  9.40s/it, loss=0.0353, noise=0.0177, motion=0.0051, depth=0.0000]

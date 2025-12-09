@@ -1,0 +1,82 @@
+================================================================
+Physics-IQ WAN2.2 Inference Log
+Started at: Tue Oct 14 19:26:45 CDT 2025
+================================================================
+Command: python inference_physics_iq_wan22.py --output_dir physics_iq_results --model_name wan22 --height 480 --width 832 --num_frames 81 --fps 16 --cfg_scale 7.0 --num_inference_steps 50 --seed 42 --device cuda
+================================================================
+
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/transformers/utils/hub.py:111: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+2025-10-14 19:26:52,247 - modelscope - INFO - Target directory already exists, skipping creation.
+2025-10-14 19:27:04,654 - modelscope - INFO - Target directory already exists, skipping creation.
+2025-10-14 19:27:21,039 - modelscope - INFO - Target directory already exists, skipping creation.
+2025-10-14 19:27:24,227 - modelscope - INFO - Target directory already exists, skipping creation.
+============================================================
+Physics-IQ WAN2.2 Inference Pipeline
+============================================================
+
+Configuration:
+  height: 480
+  width: 832
+  num_frames: 81
+  cfg_scale: 7.0
+  num_inference_steps: 50
+  fps: 16
+  seed: 42
+  quality: 5
+  tiled: True
+  resize_input: False
+  negative_prompt: blurry, low quality, distorted, static image, cartoon, animation
+
+Loading data from:
+  Images: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames
+  Descriptions: /nyx-storage1/hanliu/physics-IQ-benchmark/descriptions/descriptions.csv
+
+Found 198 valid samples with switch-frame images to process
+(Note: Only scenarios 0001-0198 have switch-frame images available)
+Loading Wan2.1-T2V-1.3B model from local checkpoints...
+Using local checkpoint files from: /nyx-storage1/hanliu/world_model_ckpt
+Downloading Model from https://www.modelscope.cn to directory: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B/diffusion_pytorch_model.safetensors
+    model_name: wan_video_dit model_class: WanModel
+        This model is initialized with extra kwargs: {'has_image_input': False, 'patch_size': [1, 2, 2], 'in_dim': 16, 'dim': 1536, 'ffn_dim': 8960, 'freq_dim': 256, 'text_dim': 4096, 'out_dim': 16, 'num_heads': 12, 'num_layers': 30, 'eps': 1e-06}
+    The following models are loaded: ['wan_video_dit'].
+Downloading Model from https://www.modelscope.cn to directory: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B/models_t5_umt5-xxl-enc-bf16.pth
+    model_name: wan_video_text_encoder model_class: WanTextEncoder
+    The following models are loaded: ['wan_video_text_encoder'].
+Downloading Model from https://www.modelscope.cn to directory: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B/Wan2.1_VAE.pth
+    model_name: wan_video_vae model_class: WanVideoVAE
+    The following models are loaded: ['wan_video_vae'].
+Using wan_video_text_encoder from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B/models_t5_umt5-xxl-enc-bf16.pth.
+Using wan_video_dit from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B/diffusion_pytorch_model.safetensors.
+Using wan_video_vae from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B/Wan2.1_VAE.pth.
+No wan_video_image_encoder models available.
+No wan_video_motion_controller models available.
+No wan_video_vace models available.
+No wans2v_audio_encoder models available.
+Downloading Model from https://www.modelscope.cn to directory: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B
+
+Starting inference on 198 samples...
+============================================================
+Processing samples:   0%|          | 0/198 [00:00<?, ?it/s]
+Processing 0001: 0001_perspective-left_take-1_trimmed-ball-and-bloc...
+Prompt: Two pillows on a table and two grabber tools hanging above them from which a brown tennis ball and a...
+Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0001_switch-frames_anyFPS_perspective-left_trimmed-ball-and-block-fall.jpg
+
+VAE encoding:   0%|          | 0/9 [00:00<?, ?it/s][A
+VAE encoding:  11%|█         | 1/9 [00:01<00:10,  1.28s/it][A
+VAE encoding:  22%|██▏       | 2/9 [00:02<00:07,  1.14s/it][A
+VAE encoding:  33%|███▎      | 3/9 [00:03<00:06,  1.10s/it][A
+VAE encoding:  44%|████▍     | 4/9 [00:04<00:05,  1.08s/it][A
+VAE encoding:  56%|█████▌    | 5/9 [00:05<00:04,  1.07s/it][A
+VAE encoding:  67%|██████▋   | 6/9 [00:06<00:03,  1.07s/it][A
+VAE encoding:  78%|███████▊  | 7/9 [00:07<00:02,  1.06s/it][A
+VAE encoding:  89%|████████▉ | 8/9 [00:08<00:01,  1.06s/it][A
+VAE encoding: 100%|██████████| 9/9 [00:09<00:00,  1.05s/it][AVAE encoding: 100%|██████████| 9/9 [00:09<00:00,  1.08s/it]
+
+  0%|          | 0/50 [00:00<?, ?it/s][A  0%|          | 0/50 [00:00<?, ?it/s]
+Processing samples:   1%|          | 1/198 [00:18<59:19, 18.07s/it]

@@ -1,0 +1,4 @@
+*.mp4
+test_*
+./physics_iq_results
+./phygenbench_results

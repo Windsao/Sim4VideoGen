@@ -1,0 +1,9 @@
+==================================================
+Wandb initialized successfully!
+  Project: Sim4Videos
+  Run name: depth_only
+[34m[1mwandb[0m: [33mWARNING[0m The get_url method is deprecated and will be removed in a future release. Please use `run.url` instead.
+  Run URL: https://wandb.ai/magicslabnorthwestern/Sim4Videos/runs/jtj6m9k8
+  Log every 10 steps
+==================================================
+Epoch 1/5:   0%|▍                                                                                                                                                                                                           | 1/525 [00:11<1:43:54, 11.90s/it, loss=0.1079, noise=0.0278, motion=0.0000, depth=1.0781]

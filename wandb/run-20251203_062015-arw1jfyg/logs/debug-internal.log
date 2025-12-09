@@ -1,0 +1,14 @@
+{"time":"2025-12-03T06:20:15.754198378-06:00","level":"INFO","msg":"stream: starting","core version":"0.23.1"}
+{"time":"2025-12-03T06:20:15.920516561-06:00","level":"INFO","msg":"stream: created new stream","id":"arw1jfyg"}
+{"time":"2025-12-03T06:20:15.92056874-06:00","level":"INFO","msg":"handler: started","stream_id":"arw1jfyg"}
+{"time":"2025-12-03T06:20:15.920603124-06:00","level":"INFO","msg":"stream: started","id":"arw1jfyg"}
+{"time":"2025-12-03T06:20:15.920612109-06:00","level":"INFO","msg":"writer: started","stream_id":"arw1jfyg"}
+{"time":"2025-12-03T06:20:15.920623963-06:00","level":"INFO","msg":"sender: started","stream_id":"arw1jfyg"}
+{"time":"2025-12-03T12:59:16.304439972-06:00","level":"INFO","msg":"api: retrying HTTP error","status":502,"url":"https://api.wandb.ai/files/magicslabnorthwestern/Sim4Videos/arw1jfyg/file_stream","body":"\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>502 Server Error</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<h1>Error: Server Error</h1>\n<h2>The server encountered a temporary error and could not complete your request.<p>Please try again in 30 seconds.</h2>\n<h2></h2>\n</body></html>\n"}
+{"time":"2025-12-03T13:23:01.197574237-06:00","level":"INFO","msg":"api: retrying HTTP error","status":502,"url":"https://api.wandb.ai/files/magicslabnorthwestern/Sim4Videos/arw1jfyg/file_stream","body":"\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>502 Server Error</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<h1>Error: Server Error</h1>\n<h2>The server encountered a temporary error and could not complete your request.<p>Please try again in 30 seconds.</h2>\n<h2></h2>\n</body></html>\n"}
+{"time":"2025-12-03T13:29:02.04228445-06:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-12-03T13:29:02.994176404-06:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-12-03T13:29:02.996561116-06:00","level":"INFO","msg":"stream: closing","id":"arw1jfyg"}
+{"time":"2025-12-03T13:29:02.996568599-06:00","level":"INFO","msg":"handler: closed","stream_id":"arw1jfyg"}
+{"time":"2025-12-03T13:29:02.996636537-06:00","level":"INFO","msg":"sender: closed","stream_id":"arw1jfyg"}
+{"time":"2025-12-03T13:29:02.996647805-06:00","level":"INFO","msg":"stream: closed","id":"arw1jfyg"}
