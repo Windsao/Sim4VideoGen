@@ -295,6 +295,11 @@ class LoadImageSequenceWithMotion(DataProcessingOperator):
         if depth.size == 0:
             return None
 
+        # Handle NaN and Inf values
+        if np.isnan(depth).any() or np.isinf(depth).any():
+            # Replace NaN with 0 and Inf with large finite values
+            depth = np.nan_to_num(depth, nan=0.0, posinf=1e6, neginf=0.0)
+
         # Apply scaling
         depth = depth * self.depth_scale
 
@@ -415,24 +420,42 @@ class LoadImageSequenceWithMotion(DataProcessingOperator):
                     # Get target size from processed frames
                     target_size = (frames[0].height, frames[0].width) if frames else None
 
+                    # First pass: load all valid depths
+                    temp_depths = []
                     for idx in selected_indices:
                         # Depth maps are per-frame, aligned with RGB frames
                         depth_idx = min(idx, len(depth_paths) - 1)
 
                         if depth_idx < len(depth_paths):
                             depth = self.load_depth_map(depth_paths[depth_idx], target_size=target_size)
-                            if depth is not None:
-                                depth_list.append(depth)
-                            else:
-                                # Create zero depth for empty/invalid frames
-                                if depth_list:
-                                    depth = np.zeros_like(depth_list[-1])
-                                elif target_size:
-                                    depth = np.zeros(target_size, dtype=np.float32)
+                            temp_depths.append(depth)  # Can be None for empty files
+                        else:
+                            temp_depths.append(None)
+
+                    # Second pass: fill in None values with nearest valid depth
+                    for i, depth in enumerate(temp_depths):
+                        if depth is not None:
+                            depth_list.append(depth)
+                        else:
+                            # Find nearest valid depth (prefer forward, then backward)
+                            found = False
+                            for j in range(1, len(temp_depths)):
+                                # Check forward
+                                if i + j < len(temp_depths) and temp_depths[i + j] is not None:
+                                    depth_list.append(temp_depths[i + j].copy())
+                                    found = True
+                                    break
+                                # Check backward
+                                if i - j >= 0 and temp_depths[i - j] is not None:
+                                    depth_list.append(temp_depths[i - j].copy())
+                                    found = True
+                                    break
+                            if not found:
+                                # No valid depth found anywhere, create zeros
+                                if target_size:
+                                    depth_list.append(np.zeros(target_size, dtype=np.float32))
                                 else:
-                                    # Fallback shape
-                                    depth = np.zeros((frames[0].height, frames[0].width), dtype=np.float32)
-                                depth_list.append(depth)
+                                    depth_list.append(np.zeros((frames[0].height, frames[0].width), dtype=np.float32))
 
                     if depth_list:
                         # Stack to (F, H, W) and convert to torch tensor

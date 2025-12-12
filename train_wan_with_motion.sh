@@ -93,6 +93,14 @@ DEPTH_LOSS_WEIGHT=0.1
 DEPTH_LOSS_TYPE="mse"
 DEPTH_SCALE=1.0  # Scale for depth values (distance to camera in meters)
 
+# Spatio-temporal depth head parameters (Video-Depth-Anything style)
+USE_SPATIOTEMPORAL_DEPTH=true  # Set to true to enable
+SPATIOTEMPORAL_DEPTH_TYPE="simple"  # "simple" or "full"
+NUM_TEMPORAL_HEADS=8
+TEMPORAL_HEAD_DIM=64
+NUM_TEMPORAL_BLOCKS=2
+TEMPORAL_POS_EMBED_TYPE="rope"  # "rope" or "ape"
+
 # Model paths
 MODEL_PATHS="[\"${MODEL_BASE_PATH}/Wan2.1-T2V-1.3B/diffusion_pytorch_model.safetensors\", \"${MODEL_BASE_PATH}/Wan2.1-T2V-1.3B/models_t5_umt5-xxl-enc-bf16.pth\", \"${MODEL_BASE_PATH}/Wan2.1-T2V-1.3B/Wan2.1_VAE.pth\"]"
 
@@ -112,6 +120,13 @@ echo ""
 echo "Depth settings:"
 echo "  - Depth loss weight: ${DEPTH_LOSS_WEIGHT}"
 echo "  - Depth scale: ${DEPTH_SCALE}"
+echo "  - Spatio-temporal depth: ${USE_SPATIOTEMPORAL_DEPTH}"
+if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
+    echo "  - Spatio-temporal type: ${SPATIOTEMPORAL_DEPTH_TYPE}"
+    echo "  - Temporal heads: ${NUM_TEMPORAL_HEADS}"
+    echo "  - Temporal blocks: ${NUM_TEMPORAL_BLOCKS}"
+    echo "  - Position embedding: ${TEMPORAL_POS_EMBED_TYPE}"
+fi
 echo ""
 
 # Set training mode flags
@@ -227,6 +242,12 @@ echo ""
 echo "Step 2/2: Starting training with motion vector and depth loss..."
 echo ""
 
+# Build spatio-temporal arguments
+SPATIOTEMPORAL_ARGS=""
+if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
+    SPATIOTEMPORAL_ARGS="--use_spatiotemporal_depth --spatiotemporal_depth_type ${SPATIOTEMPORAL_DEPTH_TYPE} --num_temporal_heads ${NUM_TEMPORAL_HEADS} --temporal_head_dim ${TEMPORAL_HEAD_DIM} --num_temporal_blocks ${NUM_TEMPORAL_BLOCKS} --temporal_pos_embed_type ${TEMPORAL_POS_EMBED_TYPE}"
+fi
+
 accelerate launch train_wan_with_motion.py \
     --dataset_base_path "${SOURCE_DIR}" \
     --dataset_metadata_path "${OUTPUT_METADATA_DIR}/metadata.csv" \
@@ -251,6 +272,7 @@ accelerate launch train_wan_with_motion.py \
     --depth_loss_weight ${DEPTH_LOSS_WEIGHT} \
     --depth_loss_type ${DEPTH_LOSS_TYPE} \
     --depth_scale ${DEPTH_SCALE} \
+    ${SPATIOTEMPORAL_ARGS} \
     --use_wandb \
     --wandb_project "Sim4Videos" \
     --wandb_run_name ${wandb_run_name} \

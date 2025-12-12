@@ -1,0 +1,565 @@
+diff --git a/inference_wan_motion_depth.py b/inference_wan_motion_depth.py
+index 2c6415a..3af4f66 100644
+--- a/inference_wan_motion_depth.py
++++ b/inference_wan_motion_depth.py
+@@ -37,6 +37,9 @@ from diffsynth.pipelines.wan_video_new import WanVideoPipeline, ModelConfig
+ from diffsynth.lora import GeneralLoRALoader
+ from diffsynth.models.wan_video_dit_motion import MotionVectorHead, DepthHead
+ from diffsynth.models.wan_video_dit import sinusoidal_embedding_1d
++from diffsynth.models.spatiotemporal_depth_head import (
++    SpatioTemporalDepthHead, SpatioTemporalDepthHeadSimple
++)
+ 
+ 
+ class MotionDepthWanPipeline:
+@@ -48,13 +51,17 @@ class MotionDepthWanPipeline:
+         self,
+         pipe: WanVideoPipeline,
+         motion_head: Optional[MotionVectorHead] = None,
+-        depth_head: Optional[DepthHead] = None,
++        depth_head = None,  # Can be DepthHead or SpatioTemporalDepthHead variants
+         motion_channels: int = 4,
++        use_spatiotemporal_depth: bool = False,
++        spatiotemporal_depth_type: str = "simple",  # "simple" or "full"
+     ):
+         self.pipe = pipe
+         self.motion_head = motion_head
+         self.depth_head = depth_head
+         self.motion_channels = motion_channels
++        self.use_spatiotemporal_depth = use_spatiotemporal_depth
++        self.spatiotemporal_depth_type = spatiotemporal_depth_type
+ 
+         # Move heads to same device as pipeline
+         if self.motion_head is not None:
+@@ -152,19 +159,30 @@ class MotionDepthWanPipeline:
+             sinusoidal_embedding_1d(self.pipe.dit.freq_dim, timestep)
+         )
+ 
+-        # Predict depth
+-        depth_pred = self.depth_head(features, t_embed)
+-
+-        # Unpatchify
+         f, h, w = grid_size
+         patch_size = self.pipe.dit.patch_size
+ 
+-        depth_pred = rearrange(
+-            depth_pred, 'b (f h w) (x y z c) -> b c (f x) (h y) (w z)',
+-            f=f, h=h, w=w,
+-            x=patch_size[0], y=patch_size[1], z=patch_size[2],
+-            c=1  # Single channel depth
+-        )
++        if self.use_spatiotemporal_depth:
++            if self.spatiotemporal_depth_type == "full":
++                # SpatioTemporalDepthHead returns (depth, cached_states)
++                # It handles unpatchify internally
++                depth_pred, _ = self.depth_head(features, t_embed, grid_size)
++            else:
++                # SpatioTemporalDepthHeadSimple returns (depth_patchified, cached_states)
++                depth_pred, _ = self.depth_head(features, t_embed, grid_size)
++                # Unpatchify for simple version
++                depth_pred = self.depth_head.unpatchify(depth_pred, grid_size)
++        else:
++            # Standard DepthHead
++            depth_pred = self.depth_head(features, t_embed)
++
++            # Unpatchify
++            depth_pred = rearrange(
++                depth_pred, 'b (f h w) (x y z c) -> b c (f x) (h y) (w z)',
++                f=f, h=h, w=w,
++                x=patch_size[0], y=patch_size[1], z=patch_size[2],
++                c=1  # Single channel depth
++            )
+ 
+         return depth_pred
+ 
+@@ -331,18 +349,78 @@ def load_depth_head(
+     patch_size: Tuple[int, int, int] = (1, 2, 2),
+     device: str = "cuda",
+     dtype: torch.dtype = torch.bfloat16,
+-) -> Optional[DepthHead]:
+-    """Load a trained depth head checkpoint (supports .safetensors and .pt)."""
++    use_spatiotemporal: bool = False,
++    spatiotemporal_type: str = "simple",
++    num_temporal_heads: int = 8,
++    temporal_head_dim: int = 64,
++    num_temporal_blocks: int = 2,
++    temporal_pos_embed_type: str = "rope",
++):
++    """
++    Load a trained depth head checkpoint (supports .safetensors and .pt).
++
++    Args:
++        checkpoint_path: Path to checkpoint file
++        dim: Model dimension
++        patch_size: Patch size tuple
++        device: Device to load to
++        dtype: Data type
++        use_spatiotemporal: Whether to use spatio-temporal depth head
++        spatiotemporal_type: Type of spatio-temporal head ("simple" or "full")
++        num_temporal_heads: Number of attention heads in temporal module
++        temporal_head_dim: Dimension per attention head
++        num_temporal_blocks: Number of temporal transformer blocks
++        temporal_pos_embed_type: Position embedding type ("rope" or "ape")
++
++    Returns:
++        Loaded depth head or None if checkpoint not found
++    """
+     if not checkpoint_path:
+         return None
+ 
+-    depth_head = DepthHead(
+-        dim=dim,
+-        depth_channels=1,
+-        patch_size=patch_size,
+-        eps=1e-6,
+-        output_scale=1.0,
+-    )
++    if use_spatiotemporal:
++        if spatiotemporal_type == "full":
++            depth_head = SpatioTemporalDepthHead(
++                dim=dim,
++                patch_size=patch_size,
++                features=256,
++                num_temporal_heads=num_temporal_heads,
++                temporal_head_dim=temporal_head_dim,
++                num_temporal_blocks=num_temporal_blocks,
++                use_bn=False,
++                pos_embed_type=temporal_pos_embed_type,
++                max_frames=256,
++                output_scale=1.0,
++                eps=1e-6,
++            )
++            print(f"Created SpatioTemporalDepthHead (full)")
++        else:
++            depth_head = SpatioTemporalDepthHeadSimple(
++                dim=dim,
++                depth_channels=1,
++                patch_size=patch_size,
++                num_temporal_heads=num_temporal_heads,
++                temporal_head_dim=temporal_head_dim,
++                num_temporal_blocks=num_temporal_blocks,
++                pos_embed_type=temporal_pos_embed_type,
++                max_frames=256,
++                output_scale=1.0,
++                eps=1e-6,
++            )
++            print(f"Created SpatioTemporalDepthHeadSimple")
++        print(f"  Temporal heads: {num_temporal_heads}")
++        print(f"  Temporal head dim: {temporal_head_dim}")
++        print(f"  Temporal blocks: {num_temporal_blocks}")
++        print(f"  Position embedding: {temporal_pos_embed_type}")
++    else:
++        depth_head = DepthHead(
++            dim=dim,
++            depth_channels=1,
++            patch_size=patch_size,
++            eps=1e-6,
++            output_scale=1.0,
++        )
++        print(f"Created standard DepthHead")
+ 
+     if Path(checkpoint_path).exists():
+         # Use load_state_dict which handles both .safetensors and .pt files
+@@ -365,7 +443,11 @@ def load_depth_head(
+         if any(k.startswith("depth_head.") for k in state_dict.keys()):
+             state_dict = new_state_dict
+ 
+-        depth_head.load_state_dict(state_dict, strict=False)
++        missing, unexpected = depth_head.load_state_dict(state_dict, strict=False)
++        if missing:
++            print(f"  Warning: Missing keys: {len(missing)} keys")
++        if unexpected:
++            print(f"  Warning: Unexpected keys: {len(unexpected)} keys")
+         print(f"Loaded depth head from: {checkpoint_path}")
+     else:
+         print(f"Warning: Depth head checkpoint not found: {checkpoint_path}")
+@@ -574,6 +656,45 @@ def main():
+         help="CFG scale",
+     )
+ 
++    # Spatio-temporal depth head arguments
++    parser.add_argument(
++        "--use_spatiotemporal_depth",
++        action="store_true",
++        help="Use Video-Depth-Anything style spatio-temporal depth head",
++    )
++    parser.add_argument(
++        "--spatiotemporal_depth_type",
++        type=str,
++        default="simple",
++        choices=["simple", "full"],
++        help="Type of spatio-temporal depth head: 'simple' (lightweight) or 'full' (multi-scale)",
++    )
++    parser.add_argument(
++        "--num_temporal_heads",
++        type=int,
++        default=8,
++        help="Number of attention heads in temporal attention (default: 8)",
++    )
++    parser.add_argument(
++        "--temporal_head_dim",
++        type=int,
++        default=64,
++        help="Dimension of each attention head in temporal attention (default: 64)",
++    )
++    parser.add_argument(
++        "--num_temporal_blocks",
++        type=int,
++        default=2,
++        help="Number of temporal transformer blocks (default: 2)",
++    )
++    parser.add_argument(
++        "--temporal_pos_embed_type",
++        type=str,
++        default="rope",
++        choices=["rope", "ape"],
++        help="Type of positional embedding for temporal attention: 'rope' or 'ape' (default: rope)",
++    )
++
+     args = parser.parse_args()
+ 
+     print("=" * 60)
+@@ -586,6 +707,11 @@ def main():
+     print(f"Output depth: {args.output_depth}")
+     print(f"Resolution: {args.width}x{args.height}")
+     print(f"Frames: {args.num_frames}")
++    print(f"Spatio-temporal depth: {args.use_spatiotemporal_depth}")
++    if args.use_spatiotemporal_depth:
++        print(f"  Type: {args.spatiotemporal_depth_type}")
++        print(f"  Temporal heads: {args.num_temporal_heads}")
++        print(f"  Temporal blocks: {args.num_temporal_blocks}")
+     print()
+ 
+     # Note: input_image is kept for compatibility but not used in T2V mode
+@@ -647,6 +773,12 @@ def main():
+         patch_size=pipe.dit.patch_size,
+         device=args.device,
+         dtype=torch.bfloat16,
++        use_spatiotemporal=args.use_spatiotemporal_depth,
++        spatiotemporal_type=args.spatiotemporal_depth_type,
++        num_temporal_heads=args.num_temporal_heads,
++        temporal_head_dim=args.temporal_head_dim,
++        num_temporal_blocks=args.num_temporal_blocks,
++        temporal_pos_embed_type=args.temporal_pos_embed_type,
+     )
+ 
+     # Create motion-depth pipeline
+@@ -655,6 +787,8 @@ def main():
+         motion_head=motion_head,
+         depth_head=depth_head,
+         motion_channels=args.motion_channels,
++        use_spatiotemporal_depth=args.use_spatiotemporal_depth,
++        spatiotemporal_depth_type=args.spatiotemporal_depth_type,
+     )
+ 
+     # Generate video with motion and depth
+diff --git a/train_wan_with_motion.py b/train_wan_with_motion.py
+index 53604eb..f74d0de 100644
+--- a/train_wan_with_motion.py
++++ b/train_wan_with_motion.py
+@@ -52,6 +52,9 @@ from diffsynth.models.wan_video_dit_motion import (
+     MotionVectorHead, DepthHead,
+     compute_motion_loss, compute_depth_loss
+ )
++from diffsynth.models.spatiotemporal_depth_head import (
++    SpatioTemporalDepthHead, SpatioTemporalDepthHeadSimple
++)
+ 
+ from accelerate import Accelerator
+ from accelerate.utils import DistributedDataParallelKwargs
+@@ -105,6 +108,13 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
+         # Depth-specific parameters
+         depth_loss_weight: float = 0.1,
+         depth_loss_type: str = "mse",
++        # Spatio-temporal depth head parameters
++        use_spatiotemporal_depth: bool = False,
++        spatiotemporal_depth_type: str = "simple",  # "simple" or "full"
++        num_temporal_heads: int = 8,
++        temporal_head_dim: int = 64,
++        num_temporal_blocks: int = 2,
++        temporal_pos_embed_type: str = "rope",  # "rope" or "ape"
+     ):
+         super().__init__()
+ 
+@@ -141,6 +151,14 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
+         self.depth_loss_weight = depth_loss_weight if self.enable_depth else 0.0
+         self.depth_loss_type = depth_loss_type
+ 
++        # Spatio-temporal depth parameters
++        self.use_spatiotemporal_depth = use_spatiotemporal_depth
++        self.spatiotemporal_depth_type = spatiotemporal_depth_type
++        self.num_temporal_heads = num_temporal_heads
++        self.temporal_head_dim = temporal_head_dim
++        self.num_temporal_blocks = num_temporal_blocks
++        self.temporal_pos_embed_type = temporal_pos_embed_type
++
+         # Initialize feature capture variables
+         self._dit_features = None
+         self._dit_timestep_embed = None
+@@ -232,19 +250,61 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
+         patch_size = dit.patch_size
+         eps = 1e-6
+ 
+-        # Create depth head (single channel output)
+-        self.depth_head = DepthHead(
+-            dim=dim,
+-            depth_channels=1,
+-            patch_size=patch_size,
+-            eps=eps,
+-            output_scale=1.0,
+-        )
++        if self.use_spatiotemporal_depth:
++            # Use spatio-temporal depth head (Video-Depth-Anything style)
++            if self.spatiotemporal_depth_type == "full":
++                self.depth_head = SpatioTemporalDepthHead(
++                    dim=dim,
++                    patch_size=patch_size,
++                    features=256,  # Internal feature dimension for fusion
++                    num_temporal_heads=self.num_temporal_heads,
++                    temporal_head_dim=self.temporal_head_dim,
++                    num_temporal_blocks=self.num_temporal_blocks,
++                    use_bn=False,
++                    pos_embed_type=self.temporal_pos_embed_type,
++                    max_frames=256,
++                    output_scale=1.0,
++                    eps=eps,
++                )
++                print(f"[INFO] Using SpatioTemporalDepthHead (full)")
++            else:
++                # Use simplified version
++                self.depth_head = SpatioTemporalDepthHeadSimple(
++                    dim=dim,
++                    depth_channels=1,
++                    patch_size=patch_size,
++                    num_temporal_heads=self.num_temporal_heads,
++                    temporal_head_dim=self.temporal_head_dim,
++                    num_temporal_blocks=self.num_temporal_blocks,
++                    pos_embed_type=self.temporal_pos_embed_type,
++                    max_frames=256,
++                    output_scale=1.0,
++                    eps=eps,
++                )
++                print(f"[INFO] Using SpatioTemporalDepthHeadSimple")
++            print(f"  - Temporal heads: {self.num_temporal_heads}")
++            print(f"  - Temporal head dim: {self.temporal_head_dim}")
++            print(f"  - Temporal blocks: {self.num_temporal_blocks}")
++            print(f"  - Position embedding: {self.temporal_pos_embed_type}")
++        else:
++            # Create standard depth head (single channel output)
++            self.depth_head = DepthHead(
++                dim=dim,
++                depth_channels=1,
++                patch_size=patch_size,
++                eps=eps,
++                output_scale=1.0,
++            )
++            print(f"[INFO] Using standard DepthHead")
+ 
+         # Convert depth head to same dtype as DiT model (bfloat16)
+         dit_dtype = next(dit.parameters()).dtype
+         self.depth_head = self.depth_head.to(dtype=dit_dtype)
+ 
++        # Print parameter count
++        depth_params = sum(p.numel() for p in self.depth_head.parameters())
++        print(f"  - Total depth head parameters: {depth_params:,}")
++
+     def _apply_training_mode_freeze(self):
+         """Apply freeze pattern based on training mode."""
+         dit = self.pipe.dit
+@@ -413,19 +473,31 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
+         Returns:
+             Depth maps of shape (B, 1, F, H, W)
+         """
+-        depth_pred = self.depth_head(features, t_embed)
+-
+-        # Unpatchify
+         f, h, w = grid_size
+         patch_size = self.pipe.dit.patch_size
+ 
+-        from einops import rearrange
+-        depth_pred = rearrange(
+-            depth_pred, 'b (f h w) (x y z c) -> b c (f x) (h y) (w z)',
+-            f=f, h=h, w=w,
+-            x=patch_size[0], y=patch_size[1], z=patch_size[2],
+-            c=1  # Single channel depth
+-        )
++        if self.use_spatiotemporal_depth:
++            if self.spatiotemporal_depth_type == "full":
++                # SpatioTemporalDepthHead returns (depth, cached_states)
++                # It handles unpatchify internally
++                depth_pred, _ = self.depth_head(features, t_embed, grid_size)
++            else:
++                # SpatioTemporalDepthHeadSimple returns (depth_patchified, cached_states)
++                depth_pred, _ = self.depth_head(features, t_embed, grid_size)
++                # Unpatchify for simple version
++                depth_pred = self.depth_head.unpatchify(depth_pred, grid_size)
++        else:
++            # Standard DepthHead
++            depth_pred = self.depth_head(features, t_embed)
++
++            # Unpatchify
++            from einops import rearrange
++            depth_pred = rearrange(
++                depth_pred, 'b (f h w) (x y z c) -> b c (f x) (h y) (w z)',
++                f=f, h=h, w=w,
++                x=patch_size[0], y=patch_size[1], z=patch_size[2],
++                c=1  # Single channel depth
++            )
+ 
+         return depth_pred
+ 
+@@ -904,6 +976,45 @@ def motion_aware_wan_parser():
+         help="Normalize depth values to [0, 1] range",
+     )
+ 
++    # Spatio-temporal depth head arguments
++    parser.add_argument(
++        "--use_spatiotemporal_depth",
++        action="store_true",
++        help="Use Video-Depth-Anything style spatio-temporal depth head",
++    )
++    parser.add_argument(
++        "--spatiotemporal_depth_type",
++        type=str,
++        default="simple",
++        choices=["simple", "full"],
++        help="Type of spatio-temporal depth head: 'simple' (lightweight) or 'full' (multi-scale)",
++    )
++    parser.add_argument(
++        "--num_temporal_heads",
++        type=int,
++        default=8,
++        help="Number of attention heads in temporal attention (default: 8)",
++    )
++    parser.add_argument(
++        "--temporal_head_dim",
++        type=int,
++        default=64,
++        help="Dimension of each attention head in temporal attention (default: 64)",
++    )
++    parser.add_argument(
++        "--num_temporal_blocks",
++        type=int,
++        default=2,
++        help="Number of temporal transformer blocks (default: 2)",
++    )
++    parser.add_argument(
++        "--temporal_pos_embed_type",
++        type=str,
++        default="rope",
++        choices=["rope", "ape"],
++        help="Type of positional embedding for temporal attention: 'rope' or 'ape' (default: rope)",
++    )
++
+     # Wandb arguments
+     parser.add_argument(
+         "--use_wandb",
+@@ -1178,6 +1289,13 @@ if __name__ == "__main__":
+     print(f"Training mode: {args.training_mode}")
+     print(f"Motion loss weight: {args.motion_loss_weight}")
+     print(f"Depth loss weight: {args.depth_loss_weight}")
++    print(f"Spatio-temporal depth: {args.use_spatiotemporal_depth}")
++    if args.use_spatiotemporal_depth:
++        print(f"  Type: {args.spatiotemporal_depth_type}")
++        print(f"  Temporal heads: {args.num_temporal_heads}")
++        print(f"  Temporal head dim: {args.temporal_head_dim}")
++        print(f"  Temporal blocks: {args.num_temporal_blocks}")
++        print(f"  Position embedding: {args.temporal_pos_embed_type}")
+     print(f"Wandb enabled: {args.use_wandb}")
+     if args.use_wandb:
+         print(f"  Project: {args.wandb_project}")
+@@ -1232,6 +1350,13 @@ if __name__ == "__main__":
+         training_mode=args.training_mode,
+         depth_loss_weight=args.depth_loss_weight,
+         depth_loss_type=args.depth_loss_type,
++        # Spatio-temporal depth head parameters
++        use_spatiotemporal_depth=args.use_spatiotemporal_depth,
++        spatiotemporal_depth_type=args.spatiotemporal_depth_type,
++        num_temporal_heads=args.num_temporal_heads,
++        temporal_head_dim=args.temporal_head_dim,
++        num_temporal_blocks=args.num_temporal_blocks,
++        temporal_pos_embed_type=args.temporal_pos_embed_type,
+     )
+ 
+     # Create model logger
+diff --git a/train_wan_with_motion.sh b/train_wan_with_motion.sh
+index eca3f79..b3f3ef6 100755
+--- a/train_wan_with_motion.sh
++++ b/train_wan_with_motion.sh
+@@ -93,6 +93,14 @@ DEPTH_LOSS_WEIGHT=0.1
+ DEPTH_LOSS_TYPE="mse"
+ DEPTH_SCALE=1.0  # Scale for depth values (distance to camera in meters)
+ 
++# Spatio-temporal depth head parameters (Video-Depth-Anything style)
++USE_SPATIOTEMPORAL_DEPTH=true  # Set to true to enable
++SPATIOTEMPORAL_DEPTH_TYPE="simple"  # "simple" or "full"
++NUM_TEMPORAL_HEADS=8
++TEMPORAL_HEAD_DIM=64
++NUM_TEMPORAL_BLOCKS=2
++TEMPORAL_POS_EMBED_TYPE="rope"  # "rope" or "ape"
++
+ # Model paths
+ MODEL_PATHS="[\"${MODEL_BASE_PATH}/Wan2.1-T2V-1.3B/diffusion_pytorch_model.safetensors\", \"${MODEL_BASE_PATH}/Wan2.1-T2V-1.3B/models_t5_umt5-xxl-enc-bf16.pth\", \"${MODEL_BASE_PATH}/Wan2.1-T2V-1.3B/Wan2.1_VAE.pth\"]"
+ 
+@@ -112,6 +120,13 @@ echo ""
+ echo "Depth settings:"
+ echo "  - Depth loss weight: ${DEPTH_LOSS_WEIGHT}"
+ echo "  - Depth scale: ${DEPTH_SCALE}"
++echo "  - Spatio-temporal depth: ${USE_SPATIOTEMPORAL_DEPTH}"
++if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
++    echo "  - Spatio-temporal type: ${SPATIOTEMPORAL_DEPTH_TYPE}"
++    echo "  - Temporal heads: ${NUM_TEMPORAL_HEADS}"
++    echo "  - Temporal blocks: ${NUM_TEMPORAL_BLOCKS}"
++    echo "  - Position embedding: ${TEMPORAL_POS_EMBED_TYPE}"
++fi
+ echo ""
+ 
+ # Set training mode flags
+@@ -227,6 +242,12 @@ echo ""
+ echo "Step 2/2: Starting training with motion vector and depth loss..."
+ echo ""
+ 
++# Build spatio-temporal arguments
++SPATIOTEMPORAL_ARGS=""
++if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
++    SPATIOTEMPORAL_ARGS="--use_spatiotemporal_depth --spatiotemporal_depth_type ${SPATIOTEMPORAL_DEPTH_TYPE} --num_temporal_heads ${NUM_TEMPORAL_HEADS} --temporal_head_dim ${TEMPORAL_HEAD_DIM} --num_temporal_blocks ${NUM_TEMPORAL_BLOCKS} --temporal_pos_embed_type ${TEMPORAL_POS_EMBED_TYPE}"
++fi
++
+ accelerate launch train_wan_with_motion.py \
+     --dataset_base_path "${SOURCE_DIR}" \
+     --dataset_metadata_path "${OUTPUT_METADATA_DIR}/metadata.csv" \
+@@ -251,6 +272,7 @@ accelerate launch train_wan_with_motion.py \
+     --depth_loss_weight ${DEPTH_LOSS_WEIGHT} \
+     --depth_loss_type ${DEPTH_LOSS_TYPE} \
+     --depth_scale ${DEPTH_SCALE} \
++    ${SPATIOTEMPORAL_ARGS} \
+     --use_wandb \
+     --wandb_project "Sim4Videos" \
+     --wandb_run_name ${wandb_run_name} \
+diff --git a/wandb/debug-internal.log b/wandb/debug-internal.log
+index 9b9de65..cf0325b 120000
+--- a/wandb/debug-internal.log
++++ b/wandb/debug-internal.log
+@@ -1 +1 @@
+-run-20251203_062015-arw1jfyg/logs/debug-internal.log
+\ No newline at end of file
++run-20251212_073455-58vw8m8d/logs/debug-internal.log
+\ No newline at end of file
+diff --git a/wandb/debug.log b/wandb/debug.log
+index 937bd35..f67a755 120000
+--- a/wandb/debug.log
++++ b/wandb/debug.log
+@@ -1 +1 @@
+-run-20251203_062015-arw1jfyg/logs/debug.log
+\ No newline at end of file
++run-20251212_073455-58vw8m8d/logs/debug.log
+\ No newline at end of file
+diff --git a/wandb/latest-run b/wandb/latest-run
+index 530c61a..2ee3b99 120000
+--- a/wandb/latest-run
++++ b/wandb/latest-run
+@@ -1 +1 @@
+-run-20251203_062015-arw1jfyg
+\ No newline at end of file
++run-20251212_073455-58vw8m8d
+\ No newline at end of file
