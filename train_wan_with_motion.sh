@@ -95,7 +95,14 @@ DEPTH_SCALE=1.0  # Scale for depth values (distance to camera in meters)
 
 # Spatio-temporal depth head parameters (Video-Depth-Anything style)
 USE_SPATIOTEMPORAL_DEPTH=true  # Set to true to enable
-SPATIOTEMPORAL_DEPTH_TYPE="simple"  # "simple" or "full"
+SPATIOTEMPORAL_DEPTH_TYPE="full"  # "simple" or "full"
+if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
+    if [ "${SPATIOTEMPORAL_DEPTH_TYPE}" = "simple" ]; then
+        OUTPUT_MODEL_PATH="${MODEL_BASE_PATH}/sim_physics_Wan2.1_spatio_head_simple"
+    else
+        OUTPUT_MODEL_PATH="${MODEL_BASE_PATH}/sim_physics_Wan2.1_spatio_head_full"
+    fi
+fi
 NUM_TEMPORAL_HEADS=8
 TEMPORAL_HEAD_DIM=64
 NUM_TEMPORAL_BLOCKS=2
@@ -273,7 +280,6 @@ accelerate launch train_wan_with_motion.py \
     --depth_loss_type ${DEPTH_LOSS_TYPE} \
     --depth_scale ${DEPTH_SCALE} \
     ${SPATIOTEMPORAL_ARGS} \
-    --use_wandb \
     --wandb_project "Sim4Videos" \
     --wandb_run_name ${wandb_run_name} \
 

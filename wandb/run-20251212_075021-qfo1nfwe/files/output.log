@@ -1,0 +1,61 @@
+==================================================
+Wandb initialized successfully!
+  Project: Sim4Videos
+  Run name: depth_only
+[34m[1mwandb[0m: [33mWARNING[0m The get_url method is deprecated and will be removed in a future release. Please use `run.url` instead.
+  Run URL: https://wandb.ai/magicslabnorthwestern/Sim4Videos/runs/qfo1nfwe
+  Log every 10 steps
+==================================================
+Epoch 1/5:   0%|                                                                                             | 0/525 [00:11<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/mzh1800/DiffSynth-Studio/train_wan_with_motion.py", line 1366, in <module>
+    launch_training_task_with_wandb(dataset, model, model_logger, args=args)
+  File "/home/mzh1800/DiffSynth-Studio/train_wan_with_motion.py", line 1152, in launch_training_task_with_wandb
+    result = unwrapped_model(data, return_loss_dict=True)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/mzh1800/DiffSynth-Studio/train_wan_with_motion.py", line 679, in forward
+    depth_pred = self.compute_depth_prediction(
+  File "/home/mzh1800/DiffSynth-Studio/train_wan_with_motion.py", line 483, in compute_depth_prediction
+    depth_pred, _ = self.depth_head(features, t_embed, grid_size)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/spatiotemporal_depth_head.py", line 586, in forward
+    fused = self.fusion_blocks[i](fused, temporal_outputs[i])
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/spatiotemporal_depth_head.py", line 349, in forward
+    x = x + skip
+RuntimeError: The size of tensor a (104) must match the size of tensor b (52) at non-singleton dimension 3
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/train_wan_with_motion.py", line 1366, in <module>
+[rank0]:     launch_training_task_with_wandb(dataset, model, model_logger, args=args)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/train_wan_with_motion.py", line 1152, in launch_training_task_with_wandb
+[rank0]:     result = unwrapped_model(data, return_loss_dict=True)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/train_wan_with_motion.py", line 679, in forward
+[rank0]:     depth_pred = self.compute_depth_prediction(
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/train_wan_with_motion.py", line 483, in compute_depth_prediction
+[rank0]:     depth_pred, _ = self.depth_head(features, t_embed, grid_size)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/spatiotemporal_depth_head.py", line 586, in forward
+[rank0]:     fused = self.fusion_blocks[i](fused, temporal_outputs[i])
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/spatiotemporal_depth_head.py", line 349, in forward
+[rank0]:     x = x + skip
+[rank0]: RuntimeError: The size of tensor a (104) must match the size of tensor b (52) at non-singleton dimension 3

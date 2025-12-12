@@ -1,0 +1,47 @@
+diff --git a/train_wan_with_motion.sh b/train_wan_with_motion.sh
+index b3f3ef6..bc96167 100755
+--- a/train_wan_with_motion.sh
++++ b/train_wan_with_motion.sh
+@@ -95,7 +95,14 @@ DEPTH_SCALE=1.0  # Scale for depth values (distance to camera in meters)
+ 
+ # Spatio-temporal depth head parameters (Video-Depth-Anything style)
+ USE_SPATIOTEMPORAL_DEPTH=true  # Set to true to enable
+-SPATIOTEMPORAL_DEPTH_TYPE="simple"  # "simple" or "full"
++SPATIOTEMPORAL_DEPTH_TYPE="full"  # "simple" or "full"
++if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
++    if [ "${SPATIOTEMPORAL_DEPTH_TYPE}" = "simple" ]; then
++        OUTPUT_MODEL_PATH="${MODEL_BASE_PATH}/sim_physics_Wan2.1_spatio_head_simple"
++    else
++        OUTPUT_MODEL_PATH="${MODEL_BASE_PATH}/sim_physics_Wan2.1_spatio_head_full"
++    fi
++fi
+ NUM_TEMPORAL_HEADS=8
+ TEMPORAL_HEAD_DIM=64
+ NUM_TEMPORAL_BLOCKS=2
+diff --git a/wandb/debug-internal.log b/wandb/debug-internal.log
+index 5354a61..6bb3b0e 120000
+--- a/wandb/debug-internal.log
++++ b/wandb/debug-internal.log
+@@ -1 +1 @@
+-run-20251212_073827-twjowows/logs/debug-internal.log
+\ No newline at end of file
++run-20251212_075021-qfo1nfwe/logs/debug-internal.log
+\ No newline at end of file
+diff --git a/wandb/debug.log b/wandb/debug.log
+index 7c09aaf..f37cf00 120000
+--- a/wandb/debug.log
++++ b/wandb/debug.log
+@@ -1 +1 @@
+-run-20251212_073827-twjowows/logs/debug.log
+\ No newline at end of file
++run-20251212_075021-qfo1nfwe/logs/debug.log
+\ No newline at end of file
+diff --git a/wandb/latest-run b/wandb/latest-run
+index 6c7c818..9faa5e3 120000
+--- a/wandb/latest-run
++++ b/wandb/latest-run
+@@ -1 +1 @@
+-run-20251212_073827-twjowows
+\ No newline at end of file
++run-20251212_075021-qfo1nfwe
+\ No newline at end of file

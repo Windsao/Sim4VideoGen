@@ -337,7 +337,11 @@ class ConvBlock(nn.Module):
 
 
 class FeatureFusionBlock(nn.Module):
-    """Feature fusion block for combining multi-scale features."""
+    """Feature fusion block for combining multi-scale features.
+
+    DPT-style fusion: upsample coarser features first, then add skip connection.
+    Uses skip tensor's size as target to handle rounding mismatches.
+    """
     def __init__(self, features: int, use_bn: bool = False):
         super().__init__()
         self.conv1 = ConvBlock(features, features, use_bn)
@@ -345,10 +349,14 @@ class FeatureFusionBlock(nn.Module):
         self.out_conv = nn.Conv2d(features, features, kernel_size=1)
 
     def forward(self, x: torch.Tensor, skip: Optional[torch.Tensor] = None) -> torch.Tensor:
-        if skip is not None:
-            x = x + skip
+        # First process the coarser features
         x = self.conv1(x)
-        x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
+        # Upsample to match skip connection size (handles rounding mismatches)
+        if skip is not None:
+            x = F.interpolate(x, size=skip.shape[-2:], mode='bilinear', align_corners=True)
+            x = x + skip
+        else:
+            x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
         x = self.conv2(x)
         x = self.out_conv(x)
         return x
@@ -573,10 +581,8 @@ class SpatioTemporalDepthHead(nn.Module):
             # Reshape back: (B, C, F, H, W) -> (B*F, C, H, W)
             feat = self._reshape_from_video(feat_video)
 
-            # Upsample back to original scale
-            if i > 0:
-                feat = F.interpolate(feat, size=(h, w), mode='bilinear', align_corners=True)
-
+            # Keep features at their multi-scale sizes for fusion
+            # Scale 0: (h, w), Scale 1: (h/2, w/2), Scale 2: (h/4, w/4), Scale 3: (h/8, w/8)
             temporal_outputs.append(feat)
 
         # Feature fusion (coarse to fine)
