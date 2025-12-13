@@ -93,16 +93,26 @@ DEPTH_LOSS_WEIGHT=0.1
 DEPTH_LOSS_TYPE="mse"
 DEPTH_SCALE=1.0  # Scale for depth values (distance to camera in meters)
 
+# Warp loss parameters (temporal consistency via flow warping)
+# Warp loss enforces that depth_t warped by flow_t should match depth_{t+1}
+USE_WARP_LOSS=true  # Set to true to enable warp loss
+WARP_LOSS_WEIGHT=0.1
+WARP_LOSS_TYPE="mse"  # "mse", "l1", or "smooth_l1"
+if [ "${USE_WARP_LOSS}" = true ]; then
+    OUTPUT_MODEL_PATH="${OUTPUT_MODEL_PATH}_warp_loss"
+fi
+
 # Spatio-temporal depth head parameters (Video-Depth-Anything style)
 USE_SPATIOTEMPORAL_DEPTH=true  # Set to true to enable
 SPATIOTEMPORAL_DEPTH_TYPE="full"  # "simple" or "full"
 if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
     if [ "${SPATIOTEMPORAL_DEPTH_TYPE}" = "simple" ]; then
-        OUTPUT_MODEL_PATH="${MODEL_BASE_PATH}/sim_physics_Wan2.1_spatio_head_simple"
+        OUTPUT_MODEL_PATH="${OUTPUT_MODEL_PATH}_head_simple"
     else
-        OUTPUT_MODEL_PATH="${MODEL_BASE_PATH}/sim_physics_Wan2.1_spatio_head_full"
+        OUTPUT_MODEL_PATH="${OUTPUT_MODEL_PATH}_head_full"
     fi
 fi
+
 NUM_TEMPORAL_HEADS=8
 TEMPORAL_HEAD_DIM=64
 NUM_TEMPORAL_BLOCKS=2
@@ -133,6 +143,13 @@ if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
     echo "  - Temporal heads: ${NUM_TEMPORAL_HEADS}"
     echo "  - Temporal blocks: ${NUM_TEMPORAL_BLOCKS}"
     echo "  - Position embedding: ${TEMPORAL_POS_EMBED_TYPE}"
+fi
+echo ""
+echo "Warp loss settings (temporal consistency):"
+echo "  - Warp loss enabled: ${USE_WARP_LOSS}"
+if [ "${USE_WARP_LOSS}" = true ]; then
+    echo "  - Warp loss weight: ${WARP_LOSS_WEIGHT}"
+    echo "  - Warp loss type: ${WARP_LOSS_TYPE}"
 fi
 echo ""
 
@@ -255,6 +272,12 @@ if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
     SPATIOTEMPORAL_ARGS="--use_spatiotemporal_depth --spatiotemporal_depth_type ${SPATIOTEMPORAL_DEPTH_TYPE} --num_temporal_heads ${NUM_TEMPORAL_HEADS} --temporal_head_dim ${TEMPORAL_HEAD_DIM} --num_temporal_blocks ${NUM_TEMPORAL_BLOCKS} --temporal_pos_embed_type ${TEMPORAL_POS_EMBED_TYPE}"
 fi
 
+# Build warp loss arguments
+WARP_ARGS=""
+if [ "${USE_WARP_LOSS}" = true ]; then
+    WARP_ARGS="--use_warp_loss --warp_loss_weight ${WARP_LOSS_WEIGHT} --warp_loss_type ${WARP_LOSS_TYPE}"
+fi
+
 accelerate launch train_wan_with_motion.py \
     --dataset_base_path "${SOURCE_DIR}" \
     --dataset_metadata_path "${OUTPUT_METADATA_DIR}/metadata.csv" \
@@ -280,8 +303,10 @@ accelerate launch train_wan_with_motion.py \
     --depth_loss_type ${DEPTH_LOSS_TYPE} \
     --depth_scale ${DEPTH_SCALE} \
     ${SPATIOTEMPORAL_ARGS} \
+    ${WARP_ARGS} \
     --wandb_project "Sim4Videos" \
     --wandb_run_name ${wandb_run_name} \
+
 
 if [ $? -ne 0 ]; then
     echo ""

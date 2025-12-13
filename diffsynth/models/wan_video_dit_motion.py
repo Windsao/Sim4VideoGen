@@ -400,6 +400,137 @@ def compute_motion_loss(
     return loss
 
 
+def warp_depth(
+    depth: torch.Tensor,
+    flow: torch.Tensor,
+    mode: str = "bilinear",
+    padding_mode: str = "border",
+) -> torch.Tensor:
+    """
+    Warp depth from time t to t+1 using optical flow.
+
+    This performs backward warping: for each pixel in t+1, look up the depth
+    at the corresponding position in t (determined by the flow).
+
+    Args:
+        depth: Depth at time t, shape (B, 1, H, W)
+        flow: Optical flow from t to t+1, shape (B, 2, H, W) where channels are (dx, dy)
+        mode: Interpolation mode for grid_sample ('bilinear' or 'nearest')
+        padding_mode: Padding mode for out-of-bound values ('border', 'zeros', 'reflection')
+
+    Returns:
+        Warped depth at time t+1, shape (B, 1, H, W)
+    """
+    B, _, H, W = depth.shape
+
+    # Create base grid
+    y, x = torch.meshgrid(
+        torch.arange(H, device=depth.device, dtype=depth.dtype),
+        torch.arange(W, device=depth.device, dtype=depth.dtype),
+        indexing='ij'
+    )
+    grid = torch.stack([x, y], dim=0)  # [2, H, W]
+    grid = grid.unsqueeze(0).expand(B, -1, -1, -1)  # [B, 2, H, W]
+
+    # For backward warping, we subtract the flow
+    # (where does each pixel in t+1 come from in t)
+    # If flow represents forward flow (t -> t+1), we use it directly
+    # The flow tells us where pixel at (x, y) moves to, so to find
+    # where pixel (x, y) in t+1 comes from, we need the inverse
+    # For simplicity, we assume the flow is small enough that
+    # subtracting works approximately
+    new_grid = grid - flow[:, :2]  # Only use dx, dy channels
+
+    # Normalize to [-1, 1] for grid_sample
+    new_grid[:, 0] = 2.0 * new_grid[:, 0] / (W - 1) - 1.0  # x
+    new_grid[:, 1] = 2.0 * new_grid[:, 1] / (H - 1) - 1.0  # y
+
+    # Permute for grid_sample: [B, H, W, 2]
+    new_grid = new_grid.permute(0, 2, 3, 1)
+
+    # Warp depth
+    warped_depth = F.grid_sample(
+        depth, new_grid,
+        mode=mode,
+        padding_mode=padding_mode,
+        align_corners=True
+    )
+
+    return warped_depth
+
+
+def compute_warp_loss(
+    pred_depth: torch.Tensor,
+    target_depth: torch.Tensor,
+    motion_flow: torch.Tensor,
+    loss_type: str = "mse",
+    mask: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
+    """
+    Compute temporal consistency loss by warping predicted depth.
+
+    For each frame t (except the last), warp depth_t using flow_t to get
+    predicted depth_{t+1}, then compare with actual depth_{t+1}.
+
+    Args:
+        pred_depth: Predicted depth (B, 1, T, H, W)
+        target_depth: Target depth (B, 1, T, H, W)
+        motion_flow: Motion flow GT (B, C, T-1, H, W) where C >= 2 (dx, dy, ...)
+        loss_type: Type of loss ("mse", "l1", "smooth_l1")
+        mask: Optional mask for valid regions (B, 1, T-1, H, W)
+
+    Returns:
+        Scalar warp loss value
+    """
+    B, _, T, H, W = pred_depth.shape
+    T_flow = motion_flow.shape[2]
+
+    # Flow has T-1 frames (inter-frame motion)
+    # We can compute warp loss for frames 0 to T-2
+    num_pairs = min(T - 1, T_flow)
+
+    if num_pairs <= 0:
+        # Not enough frames for warp loss
+        return torch.tensor(0.0, device=pred_depth.device, dtype=pred_depth.dtype)
+
+    total_loss = 0.0
+
+    for t in range(num_pairs):
+        # Get depth at time t
+        depth_t = pred_depth[:, :, t, :, :]  # (B, 1, H, W)
+
+        # Get flow from t to t+1
+        flow_t = motion_flow[:, :2, t, :, :]  # (B, 2, H, W), only dx, dy
+
+        # Get target depth at t+1
+        depth_t1_target = target_depth[:, :, t + 1, :, :]  # (B, 1, H, W)
+
+        # Warp depth_t to t+1 using flow
+        depth_t1_warped = warp_depth(depth_t, flow_t)
+
+        # Compute loss between warped depth and target depth at t+1
+        if loss_type == "mse":
+            frame_loss = F.mse_loss(depth_t1_warped, depth_t1_target, reduction='none')
+        elif loss_type == "l1":
+            frame_loss = F.l1_loss(depth_t1_warped, depth_t1_target, reduction='none')
+        elif loss_type == "smooth_l1":
+            frame_loss = F.smooth_l1_loss(depth_t1_warped, depth_t1_target, reduction='none')
+        else:
+            frame_loss = F.mse_loss(depth_t1_warped, depth_t1_target, reduction='none')
+
+        if mask is not None and t < mask.shape[2]:
+            frame_mask = mask[:, :, t, :, :]
+            frame_loss = frame_loss * frame_mask
+            frame_loss = frame_loss.sum() / (frame_mask.sum() + 1e-8)
+        else:
+            frame_loss = frame_loss.mean()
+
+        total_loss = total_loss + frame_loss
+
+    # Average over all frame pairs
+    return total_loss / num_pairs
+
+
 def compute_depth_loss(
     pred_depth: torch.Tensor,
     target_depth: torch.Tensor,
