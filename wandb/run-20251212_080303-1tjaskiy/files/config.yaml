@@ -1,0 +1,225 @@
+_wandb:
+    value:
+        cli_version: 0.23.1
+        code_path: code/train_wan_with_motion.py
+        e:
+            zjqp4zzdwzr9f1aqsx9b2sw4n67cj4pu:
+                args:
+                    - --dataset_base_path
+                    - /nyx-storage1/hanliu/Sim_Physics/TestOutput
+                    - --dataset_metadata_path
+                    - data/sim_physics_motion_dataset/metadata.csv
+                    - --height
+                    - "480"
+                    - --width
+                    - "832"
+                    - --num_frames
+                    - "81"
+                    - --dataset_repeat
+                    - "100"
+                    - --model_paths
+                    - '["/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B/diffusion_pytorch_model.safetensors", "/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B/models_t5_umt5-xxl-enc-bf16.pth", "/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.1-T2V-1.3B/Wan2.1_VAE.pth"]'
+                    - --learning_rate
+                    - "1e-4"
+                    - --num_epochs
+                    - "5"
+                    - --gradient_accumulation_steps
+                    - "4"
+                    - --remove_prefix_in_ckpt
+                    - pipe.dit.
+                    - --output_path
+                    - /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/sim_physics_Wan2.1_spatio_head_full
+                    - --save_steps
+                    - "100"
+                    - --use_gradient_checkpointing_offload
+                    - --training_mode
+                    - depth_only
+                    - --motion_channels
+                    - "4"
+                    - --motion_loss_weight
+                    - "0.1"
+                    - --motion_loss_type
+                    - mse
+                    - --motion_scale
+                    - "0.01"
+                    - --depth_loss_weight
+                    - "0.1"
+                    - --depth_loss_type
+                    - mse
+                    - --depth_scale
+                    - "1.0"
+                    - --use_spatiotemporal_depth
+                    - --spatiotemporal_depth_type
+                    - full
+                    - --num_temporal_heads
+                    - "8"
+                    - --temporal_head_dim
+                    - "64"
+                    - --num_temporal_blocks
+                    - "2"
+                    - --temporal_pos_embed_type
+                    - rope
+                    - --use_wandb
+                    - --wandb_project
+                    - Sim4Videos
+                    - --wandb_run_name
+                    - depth_only
+                codePath: train_wan_with_motion.py
+                codePathLocal: train_wan_with_motion.py
+                cpu_count: 48
+                cpu_count_logical: 48
+                cudaVersion: "13.1"
+                disk:
+                    /:
+                        total: "52403109888"
+                        used: "1325826048"
+                email: swu@u.northwestern.edu
+                executable: /nyx-storage1/hanliu/miniconda3/envs/diffsyn/bin/python3.10
+                git:
+                    commit: 89454bee3ae803b7125cd7b01fdbe5cfeb782db5
+                    remote: https://github.com/Windsao/Sim4VideoGen.git
+                gpu: NVIDIA A40
+                gpu_count: 4
+                gpu_nvidia:
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA A40
+                      uuid: GPU-aec1446c-76cd-43ef-63fd-179ad68f1806
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA A40
+                      uuid: GPU-0dfaee79-a37e-0666-556f-c66e1ae3c4fa
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA A40
+                      uuid: GPU-97cad36c-c9a2-4c1f-a142-38a1b39c89f0
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA A40
+                      uuid: GPU-157261bc-52e8-c593-39b7-55d0b91873eb
+                host: hemera.cs.northwestern.edu
+                memory:
+                    total: "404373397504"
+                os: Linux-4.18.0-553.87.1.el8_10.x86_64-x86_64-with-glibc2.28
+                program: /home/mzh1800/DiffSynth-Studio/train_wan_with_motion.py
+                python: CPython 3.10.18
+                root: /home/mzh1800/DiffSynth-Studio
+                slurm:
+                    cluster_name: pardo
+                    conf: /etc/slurm/slurm.conf
+                    cpus_on_node: "48"
+                    cpus_per_task: "48"
+                    distribution: cyclic
+                    gpus_on_node: "4"
+                    gtids: "0"
+                    job_account: mzh1800
+                    job_cpus_per_node: "48"
+                    job_end_time: "1797084071"
+                    job_gid: "1017"
+                    job_group: mzh1800
+                    job_id: "13663"
+                    job_name: bash
+                    job_nodelist: hemera
+                    job_num_nodes: "1"
+                    job_partition: all
+                    job_qos: normal
+                    job_start_time: "1765548071"
+                    job_uid: "1016"
+                    job_user: mzh1800
+                    jobid: "13663"
+                    launch_node_ipaddr: 165.124.149.118
+                    localid: "0"
+                    mem_per_node: "358400"
+                    nnodes: "1"
+                    nodeid: "0"
+                    nodelist: hemera
+                    nprocs: "1"
+                    ntasks: "1"
+                    prio_process: "0"
+                    procid: "0"
+                    pty_port: "38379"
+                    pty_win_col: "129"
+                    pty_win_row: "24"
+                    srun_comm_host: 165.124.149.118
+                    srun_comm_port: "42725"
+                    step_gpus: 0,1,2,3
+                    step_id: "0"
+                    step_launcher_port: "42725"
+                    step_nodelist: hemera
+                    step_num_nodes: "1"
+                    step_num_tasks: "1"
+                    step_tasks_per_node: "1"
+                    stepid: "0"
+                    submit_dir: /home/mzh1800
+                    submit_host: slurm01.cs.northwestern.edu
+                    task_pid: "1365575"
+                    tasks_per_node: "1"
+                    topology_addr: hemera
+                    topology_addr_pattern: node
+                    umask: "0002"
+                    working_cluster: pardo:165.124.149.118:6817:9984:109
+                startedAt: "2025-12-12T14:03:03.044648Z"
+                writerId: zjqp4zzdwzr9f1aqsx9b2sw4n67cj4pu
+        m: []
+        python_version: 3.10.18
+        t:
+            "1":
+                - 1
+                - 11
+                - 41
+                - 49
+                - 51
+                - 71
+                - 98
+            "2":
+                - 1
+                - 11
+                - 41
+                - 49
+                - 51
+                - 71
+                - 98
+            "3":
+                - 2
+                - 13
+                - 16
+                - 61
+            "4": 3.10.18
+            "5": 0.23.1
+            "6": 4.56.2
+            "10":
+                - 21
+            "12": 0.23.1
+            "13": linux-x86_64
+depth_loss_type:
+    value: mse
+depth_loss_weight:
+    value: 0.1
+gradient_accumulation_steps:
+    value: 4
+height:
+    value: 480
+learning_rate:
+    value: 0.0001
+lora_rank:
+    value: 32
+motion_channels:
+    value: 4
+motion_loss_type:
+    value: mse
+motion_loss_weight:
+    value: 0.1
+num_epochs:
+    value: 5
+num_frames:
+    value: 81
+training_mode:
+    value: depth_only
+weight_decay:
+    value: 0.01
+width:
+    value: 832

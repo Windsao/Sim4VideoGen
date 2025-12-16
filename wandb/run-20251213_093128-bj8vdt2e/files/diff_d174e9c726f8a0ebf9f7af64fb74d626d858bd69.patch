@@ -1,0 +1,48 @@
+diff --git a/train_wan_with_motion.sh b/train_wan_with_motion.sh
+index 153237d..9fd3d40 100755
+--- a/train_wan_with_motion.sh
++++ b/train_wan_with_motion.sh
+@@ -103,7 +103,7 @@ if [ "${USE_WARP_LOSS}" = true ]; then
+ fi
+ 
+ # Spatio-temporal depth head parameters (Video-Depth-Anything style)
+-USE_SPATIOTEMPORAL_DEPTH=true  # Set to true to enable
++USE_SPATIOTEMPORAL_DEPTH=false  # Set to true to enable
+ SPATIOTEMPORAL_DEPTH_TYPE="full"  # "simple" or "full"
+ if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
+     if [ "${SPATIOTEMPORAL_DEPTH_TYPE}" = "simple" ]; then
+@@ -306,6 +306,7 @@ accelerate launch train_wan_with_motion.py \
+     ${WARP_ARGS} \
+     --wandb_project "Sim4Videos" \
+     --wandb_run_name ${wandb_run_name} \
++    --use_wandb \
+ 
+ 
+ if [ $? -ne 0 ]; then
+diff --git a/wandb/debug-internal.log b/wandb/debug-internal.log
+index 2c1d3c6..66c65f4 120000
+--- a/wandb/debug-internal.log
++++ b/wandb/debug-internal.log
+@@ -1 +1 @@
+-run-20251213_092323-7m9p38p4/logs/debug-internal.log
+\ No newline at end of file
++run-20251213_093128-bj8vdt2e/logs/debug-internal.log
+\ No newline at end of file
+diff --git a/wandb/debug.log b/wandb/debug.log
+index c8c2902..07f5c3d 120000
+--- a/wandb/debug.log
++++ b/wandb/debug.log
+@@ -1 +1 @@
+-run-20251213_092323-7m9p38p4/logs/debug.log
+\ No newline at end of file
++run-20251213_093128-bj8vdt2e/logs/debug.log
+\ No newline at end of file
+diff --git a/wandb/latest-run b/wandb/latest-run
+index 85a75dc..149b866 120000
+--- a/wandb/latest-run
++++ b/wandb/latest-run
+@@ -1 +1 @@
+-run-20251213_092323-7m9p38p4
+\ No newline at end of file
++run-20251213_093128-bj8vdt2e
+\ No newline at end of file

@@ -2,21 +2,21 @@ video,prompt,num_frames,num_motion
 test_ball_and_block_fall/env_0/0/0,A physics simulation showing ball and block fall,199,200
 test_ball_collide/env_0/0/0,A physics simulation showing ball collide,199,200
 test_ball_hits_duck/env_0/0/0,A physics simulation showing ball hits duck,199,200
-test_ball_hits_nothing/env_0/0/0,A physics simulation showing ball hits nothing,199,200
+test_ball_hits_nothing/env_0/0/0,A physics simulation showing ball hits nothing,60,60
 test_ball_in_basket/env_0/0/0,A physics simulation showing ball in basket,199,200
 test_ball_ramp/env_0/0/0,A physics simulation showing ball ramp,199,200
 test_ball_rolls_off/env_0/0/0,A physics simulation showing ball rolls off,199,200
 test_ball_rolls_on_glass/env_0/0/0,A physics simulation showing ball rolls on glass,199,200
-test_ball_train/env_0/0/0,A physics simulation showing ball train,199,200
-test_block_domino/env_0/0/0,A physics simulation showing block domino,199,200
+test_block_domino/env_0/0/0,A physics simulation showing block domino,80,80
 test_domino_in_juice/env_0/0/0,A physics simulation showing domino in juice,199,200
-test_domino_with_space/env_0/0/0,A physics simulation showing domino with space,199,200
-test_duck_and_domino/env_0/0/0,A physics simulation showing duck and domino,199,200
+test_domino_with_space/env_0/0/0,A physics simulation showing domino with space,99,100
+test_duck_and_domino/env_0/0/0,A physics simulation showing duck and domino,100,100
 test_duck_falls_in_box/env_0/0/0,A physics simulation showing duck falls in box,199,200
 test_duck_static/env_0/0/0,A physics simulation showing duck static,199,200
 test_light_on_block/env_0/0/0,A physics simulation showing light on block,199,200
 test_light_on_mug_block/env_0/0/0,A physics simulation showing light on mug block,199,200
 test_light_on_mug/env_0/0/0,A physics simulation showing light on mug,199,200
 test_light_on_sculpture/env_0/0/0,A physics simulation showing light on sculpture,199,200
-test_roll_behind_box/env_0/0/0,A physics simulation showing roll behind box,199,200
-test_roll_front_box/env_0/0/0,A physics simulation showing roll front box,199,200
+test_roll_behind_box/env_0/0/0,A physics simulation showing roll behind box,99,100
+test_roll_front_box/env_0/0/0,A physics simulation showing roll front box,99,100
+test_ball_train/env_0/0/0,A physics simulation showing ball train,131,133

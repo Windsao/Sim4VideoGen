@@ -1,0 +1,470 @@
+diff --git a/diffsynth/models/__pycache__/wan_video_dit_motion.cpython-310.pyc b/diffsynth/models/__pycache__/wan_video_dit_motion.cpython-310.pyc
+index 99375e0..f08f2e5 100644
+Binary files a/diffsynth/models/__pycache__/wan_video_dit_motion.cpython-310.pyc and b/diffsynth/models/__pycache__/wan_video_dit_motion.cpython-310.pyc differ
+diff --git a/diffsynth/models/wan_video_dit_motion.py b/diffsynth/models/wan_video_dit_motion.py
+index 6ddfb8d..0330baa 100644
+--- a/diffsynth/models/wan_video_dit_motion.py
++++ b/diffsynth/models/wan_video_dit_motion.py
+@@ -400,6 +400,137 @@ def compute_motion_loss(
+     return loss
+ 
+ 
++def warp_depth(
++    depth: torch.Tensor,
++    flow: torch.Tensor,
++    mode: str = "bilinear",
++    padding_mode: str = "border",
++) -> torch.Tensor:
++    """
++    Warp depth from time t to t+1 using optical flow.
++
++    This performs backward warping: for each pixel in t+1, look up the depth
++    at the corresponding position in t (determined by the flow).
++
++    Args:
++        depth: Depth at time t, shape (B, 1, H, W)
++        flow: Optical flow from t to t+1, shape (B, 2, H, W) where channels are (dx, dy)
++        mode: Interpolation mode for grid_sample ('bilinear' or 'nearest')
++        padding_mode: Padding mode for out-of-bound values ('border', 'zeros', 'reflection')
++
++    Returns:
++        Warped depth at time t+1, shape (B, 1, H, W)
++    """
++    B, _, H, W = depth.shape
++
++    # Create base grid
++    y, x = torch.meshgrid(
++        torch.arange(H, device=depth.device, dtype=depth.dtype),
++        torch.arange(W, device=depth.device, dtype=depth.dtype),
++        indexing='ij'
++    )
++    grid = torch.stack([x, y], dim=0)  # [2, H, W]
++    grid = grid.unsqueeze(0).expand(B, -1, -1, -1)  # [B, 2, H, W]
++
++    # For backward warping, we subtract the flow
++    # (where does each pixel in t+1 come from in t)
++    # If flow represents forward flow (t -> t+1), we use it directly
++    # The flow tells us where pixel at (x, y) moves to, so to find
++    # where pixel (x, y) in t+1 comes from, we need the inverse
++    # For simplicity, we assume the flow is small enough that
++    # subtracting works approximately
++    new_grid = grid - flow[:, :2]  # Only use dx, dy channels
++
++    # Normalize to [-1, 1] for grid_sample
++    new_grid[:, 0] = 2.0 * new_grid[:, 0] / (W - 1) - 1.0  # x
++    new_grid[:, 1] = 2.0 * new_grid[:, 1] / (H - 1) - 1.0  # y
++
++    # Permute for grid_sample: [B, H, W, 2]
++    new_grid = new_grid.permute(0, 2, 3, 1)
++
++    # Warp depth
++    warped_depth = F.grid_sample(
++        depth, new_grid,
++        mode=mode,
++        padding_mode=padding_mode,
++        align_corners=True
++    )
++
++    return warped_depth
++
++
++def compute_warp_loss(
++    pred_depth: torch.Tensor,
++    target_depth: torch.Tensor,
++    motion_flow: torch.Tensor,
++    loss_type: str = "mse",
++    mask: Optional[torch.Tensor] = None,
++) -> torch.Tensor:
++    """
++    Compute temporal consistency loss by warping predicted depth.
++
++    For each frame t (except the last), warp depth_t using flow_t to get
++    predicted depth_{t+1}, then compare with actual depth_{t+1}.
++
++    Args:
++        pred_depth: Predicted depth (B, 1, F, H, W)
++        target_depth: Target depth (B, 1, F, H, W)
++        motion_flow: Motion flow GT (B, C, F-1, H, W) where C >= 2 (dx, dy, ...)
++        loss_type: Type of loss ("mse", "l1", "smooth_l1")
++        mask: Optional mask for valid regions (B, 1, F-1, H, W)
++
++    Returns:
++        Scalar warp loss value
++    """
++    B, _, F, H, W = pred_depth.shape
++    F_flow = motion_flow.shape[2]
++
++    # Flow has F-1 frames (inter-frame motion)
++    # We can compute warp loss for frames 0 to F-2
++    num_pairs = min(F - 1, F_flow)
++
++    if num_pairs <= 0:
++        # Not enough frames for warp loss
++        return torch.tensor(0.0, device=pred_depth.device, dtype=pred_depth.dtype)
++
++    total_loss = 0.0
++
++    for t in range(num_pairs):
++        # Get depth at time t
++        depth_t = pred_depth[:, :, t, :, :]  # (B, 1, H, W)
++
++        # Get flow from t to t+1
++        flow_t = motion_flow[:, :2, t, :, :]  # (B, 2, H, W), only dx, dy
++
++        # Get target depth at t+1
++        depth_t1_target = target_depth[:, :, t + 1, :, :]  # (B, 1, H, W)
++
++        # Warp depth_t to t+1 using flow
++        depth_t1_warped = warp_depth(depth_t, flow_t)
++
++        # Compute loss between warped depth and target depth at t+1
++        if loss_type == "mse":
++            frame_loss = F.mse_loss(depth_t1_warped, depth_t1_target, reduction='none')
++        elif loss_type == "l1":
++            frame_loss = F.l1_loss(depth_t1_warped, depth_t1_target, reduction='none')
++        elif loss_type == "smooth_l1":
++            frame_loss = F.smooth_l1_loss(depth_t1_warped, depth_t1_target, reduction='none')
++        else:
++            frame_loss = F.mse_loss(depth_t1_warped, depth_t1_target, reduction='none')
++
++        if mask is not None and t < mask.shape[2]:
++            frame_mask = mask[:, :, t, :, :]
++            frame_loss = frame_loss * frame_mask
++            frame_loss = frame_loss.sum() / (frame_mask.sum() + 1e-8)
++        else:
++            frame_loss = frame_loss.mean()
++
++        total_loss = total_loss + frame_loss
++
++    # Average over all frame pairs
++    return total_loss / num_pairs
++
++
+ def compute_depth_loss(
+     pred_depth: torch.Tensor,
+     target_depth: torch.Tensor,
+diff --git a/train_wan_with_motion.py b/train_wan_with_motion.py
+index f74d0de..42ebc13 100644
+--- a/train_wan_with_motion.py
++++ b/train_wan_with_motion.py
+@@ -50,7 +50,7 @@ from diffsynth.trainers.unified_dataset import (
+ from diffsynth.trainers.image_sequence_loader import LoadImageSequenceWithMotion
+ from diffsynth.models.wan_video_dit_motion import (
+     MotionVectorHead, DepthHead,
+-    compute_motion_loss, compute_depth_loss
++    compute_motion_loss, compute_depth_loss, compute_warp_loss
+ )
+ from diffsynth.models.spatiotemporal_depth_head import (
+     SpatioTemporalDepthHead, SpatioTemporalDepthHeadSimple
+@@ -108,6 +108,10 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
+         # Depth-specific parameters
+         depth_loss_weight: float = 0.1,
+         depth_loss_type: str = "mse",
++        # Warp loss parameters (temporal consistency via flow warping)
++        use_warp_loss: bool = False,
++        warp_loss_weight: float = 0.1,
++        warp_loss_type: str = "mse",
+         # Spatio-temporal depth head parameters
+         use_spatiotemporal_depth: bool = False,
+         spatiotemporal_depth_type: str = "simple",  # "simple" or "full"
+@@ -151,6 +155,11 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
+         self.depth_loss_weight = depth_loss_weight if self.enable_depth else 0.0
+         self.depth_loss_type = depth_loss_type
+ 
++        # Warp loss parameters (requires both depth and motion)
++        self.use_warp_loss = use_warp_loss and self.enable_depth
++        self.warp_loss_weight = warp_loss_weight if self.use_warp_loss else 0.0
++        self.warp_loss_type = warp_loss_type
++
+         # Spatio-temporal depth parameters
+         self.use_spatiotemporal_depth = use_spatiotemporal_depth
+         self.spatiotemporal_depth_type = spatiotemporal_depth_type
+@@ -740,6 +749,80 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
+             else:
+                 total_loss = total_loss + weighted_depth_loss
+ 
++        # Compute warp loss if enabled (temporal consistency via flow warping)
++        # This requires both depth prediction and motion flow GT
++        warp_loss = None
++        if self.use_warp_loss and target_depth is not None and target_motion is not None and depth_pred is not None:
++            # Resize motion flow to match depth prediction spatial dimensions if needed
++            # depth_pred shape: (B, 1, F, H, W)
++            # target_motion shape: (B, C, F-1, H, W) - note F-1 frames
++            target_motion_for_warp = target_motion.to(device=depth_pred.device, dtype=depth_pred.dtype)
++
++            # Ensure batch dimension
++            if target_motion_for_warp.dim() == 4:
++                target_motion_for_warp = target_motion_for_warp.unsqueeze(0)
++
++            # Resize motion flow spatially to match depth prediction
++            pred_f, pred_h, pred_w = depth_pred.shape[2], depth_pred.shape[3], depth_pred.shape[4]
++            flow_f, flow_h, flow_w = target_motion_for_warp.shape[2], target_motion_for_warp.shape[3], target_motion_for_warp.shape[4]
++
++            if (flow_h, flow_w) != (pred_h, pred_w):
++                # Resize flow spatially (keep temporal dimension as is since it's F-1)
++                # Reshape to (B*F_flow, C, H, W) for 2D interpolation
++                B_flow, C_flow = target_motion_for_warp.shape[:2]
++                target_motion_for_warp = target_motion_for_warp.permute(0, 2, 1, 3, 4)  # (B, F_flow, C, H, W)
++                target_motion_for_warp = target_motion_for_warp.reshape(B_flow * flow_f, C_flow, flow_h, flow_w)
++                target_motion_for_warp = F.interpolate(
++                    target_motion_for_warp,
++                    size=(pred_h, pred_w),
++                    mode='bilinear',
++                    align_corners=False
++                )
++                # Scale flow values to match new resolution
++                target_motion_for_warp[:, 0] *= pred_w / flow_w  # Scale dx
++                target_motion_for_warp[:, 1] *= pred_h / flow_h  # Scale dy
++                # Reshape back to (B, C, F_flow, H, W)
++                target_motion_for_warp = target_motion_for_warp.reshape(B_flow, flow_f, C_flow, pred_h, pred_w)
++                target_motion_for_warp = target_motion_for_warp.permute(0, 2, 1, 3, 4)  # (B, C, F_flow, H, W)
++
++            # Also resize target_depth to match depth_pred if not already done
++            target_depth_for_warp = target_depth.to(device=depth_pred.device, dtype=depth_pred.dtype)
++            if target_depth_for_warp.dim() == 4:
++                target_depth_for_warp = target_depth_for_warp.unsqueeze(0)
++
++            target_depth_f = target_depth_for_warp.shape[2]
++            if (target_depth_f, target_depth_for_warp.shape[3], target_depth_for_warp.shape[4]) != (pred_f, pred_h, pred_w):
++                target_depth_for_warp = F.interpolate(
++                    target_depth_for_warp,
++                    size=(pred_f, pred_h, pred_w),
++                    mode='trilinear',
++                    align_corners=False
++                )
++
++            # Compute warp loss
++            # Note: warp loss compares warped depth_pred[t] with target_depth[t+1]
++            # This enforces temporal consistency in predicted depth
++            warp_loss = compute_warp_loss(
++                depth_pred,
++                target_depth_for_warp,
++                target_motion_for_warp,
++                loss_type=self.warp_loss_type
++            )
++
++            # NaN check
++            if torch.isnan(warp_loss) or torch.isinf(warp_loss):
++                print(f"[WARNING] NaN/Inf warp_loss detected, skipping...")
++                warp_loss = torch.tensor(0.0, device=depth_pred.device, dtype=depth_pred.dtype, requires_grad=True)
++
++            loss_dict["warp_loss"] = warp_loss.detach().item()
++            loss_dict["warp_loss_weighted"] = (self.warp_loss_weight * warp_loss).detach().item()
++
++            weighted_warp_loss = self.warp_loss_weight * warp_loss
++            if total_loss is None:
++                total_loss = weighted_warp_loss
++            else:
++                total_loss = total_loss + weighted_warp_loss
++
+         # Safety check: ensure we have some loss to backpropagate
+         if total_loss is None:
+             # This happens when target data is missing (e.g., no depth maps for depth_only mode)
+@@ -976,6 +1059,26 @@ def motion_aware_wan_parser():
+         help="Normalize depth values to [0, 1] range",
+     )
+ 
++    # Warp loss arguments (temporal consistency via flow warping)
++    parser.add_argument(
++        "--use_warp_loss",
++        action="store_true",
++        help="Enable warp loss for depth temporal consistency (requires motion flow GT)",
++    )
++    parser.add_argument(
++        "--warp_loss_weight",
++        type=float,
++        default=0.1,
++        help="Weight for warp loss (default: 0.1)",
++    )
++    parser.add_argument(
++        "--warp_loss_type",
++        type=str,
++        default="mse",
++        choices=["mse", "l1", "smooth_l1"],
++        help="Type of warp loss (default: mse)",
++    )
++
+     # Spatio-temporal depth head arguments
+     parser.add_argument(
+         "--use_spatiotemporal_depth",
+@@ -1083,6 +1186,9 @@ def launch_training_task_with_wandb(
+             "motion_loss_type": args.motion_loss_type,
+             "depth_loss_weight": args.depth_loss_weight,
+             "depth_loss_type": args.depth_loss_type,
++            "use_warp_loss": args.use_warp_loss,
++            "warp_loss_weight": args.warp_loss_weight,
++            "warp_loss_type": args.warp_loss_type,
+             "motion_channels": args.motion_channels,
+             "lora_rank": args.lora_rank if hasattr(args, 'lora_rank') else None,
+             "height": args.height,
+@@ -1133,6 +1239,7 @@ def launch_training_task_with_wandb(
+             "noise_loss": [],
+             "motion_loss": [],
+             "depth_loss": [],
++            "warp_loss": [],
+             "total_loss": [],
+         }
+ 
+@@ -1207,15 +1314,20 @@ def launch_training_task_with_wandb(
+                         epoch_losses["motion_loss"].append(loss_dict["motion_loss"])
+                     if "depth_loss" in loss_dict:
+                         epoch_losses["depth_loss"].append(loss_dict["depth_loss"])
++                    if "warp_loss" in loss_dict:
++                        epoch_losses["warp_loss"].append(loss_dict["warp_loss"])
+ 
+                 # Update progress bar
+                 status = "SKIP" if sample_skipped else f"{loss_dict['total_loss']:.4f}"
+-                progress_bar.set_postfix({
++                postfix_dict = {
+                     "loss": status,
+                     "noise": f"{loss_dict.get('noise_loss', 0):.4f}",
+                     "motion": f"{loss_dict.get('motion_loss', 0):.4f}",
+                     "depth": f"{loss_dict.get('depth_loss', 0):.4f}",
+-                })
++                }
++                if "warp_loss" in loss_dict:
++                    postfix_dict["warp"] = f"{loss_dict['warp_loss']:.4f}"
++                progress_bar.set_postfix(postfix_dict)
+ 
+                 # Log to wandb (skip for skipped samples)
+                 if use_wandb and accelerator.is_main_process and global_step % log_every_n_steps == 0 and not sample_skipped:
+@@ -1237,6 +1349,10 @@ def launch_training_task_with_wandb(
+                         log_data["train/depth_loss"] = loss_dict["depth_loss"]
+                         log_data["train/depth_loss_weighted"] = loss_dict.get("depth_loss_weighted", loss_dict["depth_loss"])
+ 
++                    if "warp_loss" in loss_dict:
++                        log_data["train/warp_loss"] = loss_dict["warp_loss"]
++                        log_data["train/warp_loss_weighted"] = loss_dict.get("warp_loss_weighted", loss_dict["warp_loss"])
++
+                     wandb.log(log_data, step=global_step)
+ 
+                     # Debug output (first few logs)
+@@ -1263,6 +1379,9 @@ def launch_training_task_with_wandb(
+             if epoch_losses["depth_loss"]:
+                 epoch_summary["epoch/depth_loss_avg"] = sum(epoch_losses["depth_loss"]) / len(epoch_losses["depth_loss"])
+ 
++            if epoch_losses["warp_loss"]:
++                epoch_summary["epoch/warp_loss_avg"] = sum(epoch_losses["warp_loss"]) / len(epoch_losses["warp_loss"])
++
+             wandb.log(epoch_summary, step=global_step)
+ 
+         # Save epoch checkpoint
+@@ -1290,6 +1409,10 @@ if __name__ == "__main__":
+     print(f"Motion loss weight: {args.motion_loss_weight}")
+     print(f"Depth loss weight: {args.depth_loss_weight}")
+     print(f"Spatio-temporal depth: {args.use_spatiotemporal_depth}")
++    print(f"Warp loss enabled: {args.use_warp_loss}")
++    if args.use_warp_loss:
++        print(f"  Weight: {args.warp_loss_weight}")
++        print(f"  Type: {args.warp_loss_type}")
+     if args.use_spatiotemporal_depth:
+         print(f"  Type: {args.spatiotemporal_depth_type}")
+         print(f"  Temporal heads: {args.num_temporal_heads}")
+@@ -1350,6 +1473,10 @@ if __name__ == "__main__":
+         training_mode=args.training_mode,
+         depth_loss_weight=args.depth_loss_weight,
+         depth_loss_type=args.depth_loss_type,
++        # Warp loss parameters
++        use_warp_loss=args.use_warp_loss,
++        warp_loss_weight=args.warp_loss_weight,
++        warp_loss_type=args.warp_loss_type,
+         # Spatio-temporal depth head parameters
+         use_spatiotemporal_depth=args.use_spatiotemporal_depth,
+         spatiotemporal_depth_type=args.spatiotemporal_depth_type,
+diff --git a/train_wan_with_motion.sh b/train_wan_with_motion.sh
+index 76b355e..6005498 100755
+--- a/train_wan_with_motion.sh
++++ b/train_wan_with_motion.sh
+@@ -93,16 +93,26 @@ DEPTH_LOSS_WEIGHT=0.1
+ DEPTH_LOSS_TYPE="mse"
+ DEPTH_SCALE=1.0  # Scale for depth values (distance to camera in meters)
+ 
++# Warp loss parameters (temporal consistency via flow warping)
++# Warp loss enforces that depth_t warped by flow_t should match depth_{t+1}
++USE_WARP_LOSS=true  # Set to true to enable warp loss
++WARP_LOSS_WEIGHT=0.1
++WARP_LOSS_TYPE="mse"  # "mse", "l1", or "smooth_l1"
++if [ "${USE_WARP_LOSS}" = true ]; then
++    OUTPUT_MODEL_PATH="${OUTPUT_MODEL_PATH}_warp_loss"
++fi
++
+ # Spatio-temporal depth head parameters (Video-Depth-Anything style)
+-USE_SPATIOTEMPORAL_DEPTH=true  # Set to true to enable
++USE_SPATIOTEMPORAL_DEPTH=false  # Set to true to enable
+ SPATIOTEMPORAL_DEPTH_TYPE="full"  # "simple" or "full"
+ if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
+     if [ "${SPATIOTEMPORAL_DEPTH_TYPE}" = "simple" ]; then
+-        OUTPUT_MODEL_PATH="${MODEL_BASE_PATH}/sim_physics_Wan2.1_spatio_head_simple"
++        OUTPUT_MODEL_PATH="${OUTPUT_MODEL_PATH}_head_simple"
+     else
+-        OUTPUT_MODEL_PATH="${MODEL_BASE_PATH}/sim_physics_Wan2.1_spatio_head_full"
++        OUTPUT_MODEL_PATH="${OUTPUT_MODEL_PATH}_head_full"
+     fi
+ fi
++
+ NUM_TEMPORAL_HEADS=8
+ TEMPORAL_HEAD_DIM=64
+ NUM_TEMPORAL_BLOCKS=2
+@@ -135,6 +145,13 @@ if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
+     echo "  - Position embedding: ${TEMPORAL_POS_EMBED_TYPE}"
+ fi
+ echo ""
++echo "Warp loss settings (temporal consistency):"
++echo "  - Warp loss enabled: ${USE_WARP_LOSS}"
++if [ "${USE_WARP_LOSS}" = true ]; then
++    echo "  - Warp loss weight: ${WARP_LOSS_WEIGHT}"
++    echo "  - Warp loss type: ${WARP_LOSS_TYPE}"
++fi
++echo ""
+ 
+ # Set training mode flags
+ LORA_ARGS=""
+@@ -255,6 +272,12 @@ if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
+     SPATIOTEMPORAL_ARGS="--use_spatiotemporal_depth --spatiotemporal_depth_type ${SPATIOTEMPORAL_DEPTH_TYPE} --num_temporal_heads ${NUM_TEMPORAL_HEADS} --temporal_head_dim ${TEMPORAL_HEAD_DIM} --num_temporal_blocks ${NUM_TEMPORAL_BLOCKS} --temporal_pos_embed_type ${TEMPORAL_POS_EMBED_TYPE}"
+ fi
+ 
++# Build warp loss arguments
++WARP_ARGS=""
++if [ "${USE_WARP_LOSS}" = true ]; then
++    WARP_ARGS="--use_warp_loss --warp_loss_weight ${WARP_LOSS_WEIGHT} --warp_loss_type ${WARP_LOSS_TYPE}"
++fi
++
+ accelerate launch train_wan_with_motion.py \
+     --dataset_base_path "${SOURCE_DIR}" \
+     --dataset_metadata_path "${OUTPUT_METADATA_DIR}/metadata.csv" \
+@@ -280,6 +303,8 @@ accelerate launch train_wan_with_motion.py \
+     --depth_loss_type ${DEPTH_LOSS_TYPE} \
+     --depth_scale ${DEPTH_SCALE} \
+     ${SPATIOTEMPORAL_ARGS} \
++    ${WARP_ARGS} \
++    --use_wandb \
+     --wandb_project "Sim4Videos" \
+     --wandb_run_name ${wandb_run_name} \
+ 
+diff --git a/wandb/debug-internal.log b/wandb/debug-internal.log
+index 6bb3b0e..2c1d3c6 120000
+--- a/wandb/debug-internal.log
++++ b/wandb/debug-internal.log
+@@ -1 +1 @@
+-run-20251212_075021-qfo1nfwe/logs/debug-internal.log
+\ No newline at end of file
++run-20251213_092323-7m9p38p4/logs/debug-internal.log
+\ No newline at end of file
+diff --git a/wandb/debug.log b/wandb/debug.log
+index f37cf00..c8c2902 120000
+--- a/wandb/debug.log
++++ b/wandb/debug.log
+@@ -1 +1 @@
+-run-20251212_075021-qfo1nfwe/logs/debug.log
+\ No newline at end of file
++run-20251213_092323-7m9p38p4/logs/debug.log
+\ No newline at end of file
+diff --git a/wandb/latest-run b/wandb/latest-run
+index 9faa5e3..85a75dc 120000
+--- a/wandb/latest-run
++++ b/wandb/latest-run
+@@ -1 +1 @@
+-run-20251212_075021-qfo1nfwe
+\ No newline at end of file
++run-20251213_092323-7m9p38p4
+\ No newline at end of file

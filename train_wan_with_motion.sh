@@ -188,6 +188,12 @@ case "${TRAINING_MODE}" in
         exit 1
         ;;
 esac
+if [ "${USE_WARP_LOSS}" = true ]; then
+    wandb_run_name="${wandb_run_name}_warp_loss"
+fi
+if [ "${USE_SPATIOTEMPORAL_DEPTH}" = true ]; then
+    wandb_run_name="${wandb_run_name}_spatiotemporal_depth"
+fi
 echo ""
 
 # ============================================
@@ -304,8 +310,10 @@ accelerate launch train_wan_with_motion.py \
     --depth_scale ${DEPTH_SCALE} \
     ${SPATIOTEMPORAL_ARGS} \
     ${WARP_ARGS} \
+    --save_heads_every_n_steps 100 \
     --wandb_project "Sim4Videos" \
     --wandb_run_name ${wandb_run_name} \
+    --use_wandb \
 
 
 if [ $? -ne 0 ]; then
@@ -319,11 +327,19 @@ echo "========================================="
 echo "Training complete!"
 echo "========================================="
 echo "Model saved to: ${OUTPUT_MODEL_PATH}"
+echo "  - LoRA weights: ${OUTPUT_MODEL_PATH}/step-XXXX.safetensors"
+echo "  - Motion head: ${OUTPUT_MODEL_PATH}/motion_head_step-XXXX.safetensors"
+echo "  - Depth head: ${OUTPUT_MODEL_PATH}/depth_head_step-XXXX.safetensors"
 echo ""
 echo "To run inference with motion output:"
 echo "  python inference_wan_with_motion.py \\"
 echo "      --lora_checkpoint ${OUTPUT_MODEL_PATH}/step-XXXX.safetensors \\"
+echo "      --motion_head_checkpoint ${OUTPUT_MODEL_PATH}/motion_head_step-XXXX.safetensors \\"
+echo "      --depth_head_checkpoint ${OUTPUT_MODEL_PATH}/depth_head_step-XXXX.safetensors \\"
 echo "      --prompt 'Your prompt here' \\"
 echo "      --output output.mp4 \\"
 echo "      --output_motion motion.npy"
+echo ""
+echo "To continue fine-tuning with train_wan_finetune_all.sh:"
+echo "  ./train_wan_finetune_all.sh ${OUTPUT_MODEL_PATH}"
 echo ""
