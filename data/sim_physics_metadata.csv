@@ -1,0 +1,22 @@
+video,prompt
+test_ball_and_block_fall/env_0/0/0,A physics simulation of ball and block fall
+test_ball_collide/env_0/0/0,A physics simulation of ball collide
+test_ball_hits_duck/env_0/0/0,A physics simulation of ball hits duck
+test_ball_hits_nothing/env_0/0/0,A physics simulation of ball hits nothing
+test_ball_in_basket/env_0/0/0,A physics simulation of ball in basket
+test_ball_ramp/env_0/0/0,A physics simulation of ball ramp
+test_ball_rolls_off/env_0/0/0,A physics simulation of ball rolls off
+test_ball_rolls_on_glass/env_0/0/0,A physics simulation of ball rolls on glass
+test_ball_train/env_0/0/0,A physics simulation of ball train
+test_block_domino/env_0/0/0,A physics simulation of block domino
+test_domino_in_juice/env_0/0/0,A physics simulation of domino in juice
+test_domino_with_space/env_0/0/0,A physics simulation of domino with space
+test_duck_and_domino/env_0/0/0,A physics simulation of duck and domino
+test_duck_falls_in_box/env_0/0/0,A physics simulation of duck falls in box
+test_duck_static/env_0/0/0,A physics simulation of duck static
+test_light_on_block/env_0/0/0,A physics simulation of light on block
+test_light_on_mug/env_0/0/0,A physics simulation of light on mug
+test_light_on_mug_block/env_0/0/0,A physics simulation of light on mug block
+test_light_on_sculpture/env_0/0/0,A physics simulation of light on sculpture
+test_roll_behind_box/env_0/0/0,A physics simulation of roll behind box
+test_roll_front_box/env_0/0/0,A physics simulation of roll front box

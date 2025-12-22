@@ -53,6 +53,7 @@ from diffsynth.models.wan_video_dit_motion import (
     MotionVectorHead, DepthHead,
     compute_motion_loss, compute_depth_loss, compute_warp_loss
 )
+from diffsynth.models.rgb_warp_loss import compute_rgb_warp_loss
 from diffsynth.models.spatiotemporal_depth_head import (
     SpatioTemporalDepthHead, SpatioTemporalDepthHeadSimple
 )
@@ -113,6 +114,12 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
         use_warp_loss: bool = False,
         warp_loss_weight: float = 0.1,
         warp_loss_type: str = "mse",
+        # RGB warp loss parameters (photometric temporal consistency)
+        use_rgb_warp_loss: bool = False,
+        rgb_warp_loss_weight: float = 0.1,
+        rgb_warp_loss_type: str = "l1",
+        rgb_warp_use_ssim: bool = False,
+        rgb_warp_ssim_weight: float = 0.85,
         # Spatio-temporal depth head parameters
         use_spatiotemporal_depth: bool = False,
         spatiotemporal_depth_type: str = "simple",  # "simple" or "full"
@@ -160,6 +167,13 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
         self.use_warp_loss = use_warp_loss and self.enable_depth
         self.warp_loss_weight = warp_loss_weight if self.use_warp_loss else 0.0
         self.warp_loss_type = warp_loss_type
+
+        # RGB warp loss parameters (requires motion flow GT)
+        self.use_rgb_warp_loss = use_rgb_warp_loss
+        self.rgb_warp_loss_weight = rgb_warp_loss_weight if use_rgb_warp_loss else 0.0
+        self.rgb_warp_loss_type = rgb_warp_loss_type
+        self.rgb_warp_use_ssim = rgb_warp_use_ssim
+        self.rgb_warp_ssim_weight = rgb_warp_ssim_weight
 
         # Spatio-temporal depth parameters
         self.use_spatiotemporal_depth = use_spatiotemporal_depth
@@ -424,6 +438,10 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
         if depth_maps is not None:
             inputs_shared["target_depth_maps"] = depth_maps
 
+        # Store raw video frames for RGB warp loss (if enabled)
+        if self.use_rgb_warp_loss and video_frames is not None:
+            inputs_shared["target_rgb_frames"] = video_frames
+
         # Extra inputs
         for extra_input in self.extra_inputs:
             if extra_input == "input_image":
@@ -527,9 +545,10 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
         if inputs is None:
             inputs = self.forward_preprocess(data)
 
-        # Get target motion vectors and depth maps if available
+        # Get target motion vectors, depth maps, and RGB frames if available
         target_motion = inputs.pop("target_motion_vectors", None)
         target_depth = inputs.pop("target_depth_maps", None)
+        target_rgb_frames = inputs.pop("target_rgb_frames", None)
 
         # Standard training loss computation
         max_timestep_boundary = int(inputs.get("max_timestep_boundary", 1) * self.pipe.scheduler.num_train_timesteps)
@@ -830,6 +849,65 @@ class MotionAwareWanTrainingModule(DiffusionTrainingModule):
             else:
                 total_loss = total_loss + weighted_warp_loss
 
+        # Compute RGB warp loss if enabled (photometric temporal consistency)
+        rgb_warp_loss = None
+        if self.use_rgb_warp_loss and target_rgb_frames is not None and target_motion is not None:
+            # Convert PIL images to tensor (B, 3, T, H, W)
+            import torchvision.transforms.functional as TF
+
+            # Stack frames into tensor
+            rgb_tensors = []
+            for frame in target_rgb_frames:
+                rgb_tensor = TF.to_tensor(frame)  # (3, H, W), values in [0, 1]
+                rgb_tensors.append(rgb_tensor)
+            target_rgb_tensor = torch.stack(rgb_tensors, dim=1).unsqueeze(0)  # (1, 3, T, H, W)
+            target_rgb_tensor = target_rgb_tensor.to(device=self.pipe.device, dtype=self.pipe.torch_dtype)
+
+            # Resize motion flow to match RGB size if needed
+            B_rgb, C_rgb, T_rgb, H_rgb, W_rgb = target_rgb_tensor.shape
+            target_motion_for_rgb = target_motion.to(device=self.pipe.device, dtype=self.pipe.torch_dtype)
+
+            # Motion flow shape: (B, C, T-1, H_m, W_m)
+            B_m, C_m, T_m, H_m, W_m = target_motion_for_rgb.shape
+
+            if H_m != H_rgb or W_m != W_rgb:
+                # Resize motion flow to match RGB resolution
+                # Reshape to (B * T_m, C, H, W) for interpolation
+                motion_reshaped = target_motion_for_rgb.permute(0, 2, 1, 3, 4).reshape(B_m * T_m, C_m, H_m, W_m)
+                motion_resized = F.interpolate(motion_reshaped, size=(H_rgb, W_rgb), mode='bilinear', align_corners=True)
+                target_motion_for_rgb = motion_resized.reshape(B_m, T_m, C_m, H_rgb, W_rgb).permute(0, 2, 1, 3, 4)
+
+                # Scale flow values proportionally to resolution change
+                scale_h = H_rgb / H_m
+                scale_w = W_rgb / W_m
+                target_motion_for_rgb[:, 0] *= scale_w  # dx
+                target_motion_for_rgb[:, 1] *= scale_h  # dy
+
+            # For RGB warp loss, we use the target RGB itself (self-consistency)
+            # Warp frame t to t+1 and compare with actual frame t+1
+            rgb_warp_loss = compute_rgb_warp_loss(
+                target_rgb_tensor,  # Use target as both pred and target for self-consistency
+                target_rgb_tensor,
+                target_motion_for_rgb,
+                loss_type=self.rgb_warp_loss_type,
+                use_ssim=self.rgb_warp_use_ssim,
+                ssim_weight=self.rgb_warp_ssim_weight,
+            )
+
+            # NaN check
+            if torch.isnan(rgb_warp_loss) or torch.isinf(rgb_warp_loss):
+                print(f"[WARNING] NaN/Inf rgb_warp_loss detected, skipping...")
+                rgb_warp_loss = torch.tensor(0.0, device=self.pipe.device, dtype=self.pipe.torch_dtype, requires_grad=True)
+
+            loss_dict["rgb_warp_loss"] = rgb_warp_loss.detach().item()
+            loss_dict["rgb_warp_loss_weighted"] = (self.rgb_warp_loss_weight * rgb_warp_loss).detach().item()
+
+            weighted_rgb_warp_loss = self.rgb_warp_loss_weight * rgb_warp_loss
+            if total_loss is None:
+                total_loss = weighted_rgb_warp_loss
+            else:
+                total_loss = total_loss + weighted_rgb_warp_loss
+
         # Safety check: ensure we have some loss to backpropagate
         if total_loss is None:
             # This happens when target data is missing (e.g., no depth maps for depth_only mode)
@@ -1106,6 +1184,37 @@ def motion_aware_wan_parser():
         help="Type of warp loss (default: mse)",
     )
 
+    # RGB warp loss arguments (photometric temporal consistency)
+    parser.add_argument(
+        "--use_rgb_warp_loss",
+        action="store_true",
+        help="Enable RGB warp loss for photometric temporal consistency (requires motion flow GT)",
+    )
+    parser.add_argument(
+        "--rgb_warp_loss_weight",
+        type=float,
+        default=0.1,
+        help="Weight for RGB warp loss (default: 0.1)",
+    )
+    parser.add_argument(
+        "--rgb_warp_loss_type",
+        type=str,
+        default="l1",
+        choices=["mse", "l1", "smooth_l1", "charbonnier"],
+        help="Type of RGB warp loss (default: l1)",
+    )
+    parser.add_argument(
+        "--rgb_warp_use_ssim",
+        action="store_true",
+        help="Combine RGB warp loss with SSIM loss for better structure preservation",
+    )
+    parser.add_argument(
+        "--rgb_warp_ssim_weight",
+        type=float,
+        default=0.85,
+        help="Weight for SSIM in combined loss (default: 0.85, pixel loss weight = 1 - ssim_weight)",
+    )
+
     # Spatio-temporal depth head arguments
     parser.add_argument(
         "--use_spatiotemporal_depth",
@@ -1222,6 +1331,11 @@ def launch_training_task_with_wandb(
             "use_warp_loss": args.use_warp_loss,
             "warp_loss_weight": args.warp_loss_weight,
             "warp_loss_type": args.warp_loss_type,
+            "use_rgb_warp_loss": args.use_rgb_warp_loss,
+            "rgb_warp_loss_weight": args.rgb_warp_loss_weight,
+            "rgb_warp_loss_type": args.rgb_warp_loss_type,
+            "rgb_warp_use_ssim": args.rgb_warp_use_ssim,
+            "rgb_warp_ssim_weight": args.rgb_warp_ssim_weight,
             "motion_channels": args.motion_channels,
             "lora_rank": args.lora_rank if hasattr(args, 'lora_rank') else None,
             "height": args.height,
@@ -1274,6 +1388,7 @@ def launch_training_task_with_wandb(
             "motion_loss": [],
             "depth_loss": [],
             "warp_loss": [],
+            "rgb_warp_loss": [],
             "total_loss": [],
         }
 
@@ -1350,6 +1465,8 @@ def launch_training_task_with_wandb(
                         epoch_losses["depth_loss"].append(loss_dict["depth_loss"])
                     if "warp_loss" in loss_dict:
                         epoch_losses["warp_loss"].append(loss_dict["warp_loss"])
+                    if "rgb_warp_loss" in loss_dict:
+                        epoch_losses["rgb_warp_loss"].append(loss_dict["rgb_warp_loss"])
 
                 # Update progress bar
                 status = "SKIP" if sample_skipped else f"{loss_dict['total_loss']:.4f}"
@@ -1361,6 +1478,8 @@ def launch_training_task_with_wandb(
                 }
                 if "warp_loss" in loss_dict:
                     postfix_dict["warp"] = f"{loss_dict['warp_loss']:.4f}"
+                if "rgb_warp_loss" in loss_dict:
+                    postfix_dict["rgb_warp"] = f"{loss_dict['rgb_warp_loss']:.4f}"
                 progress_bar.set_postfix(postfix_dict)
 
                 # Log to wandb (skip for skipped samples)
@@ -1386,6 +1505,10 @@ def launch_training_task_with_wandb(
                     if "warp_loss" in loss_dict:
                         log_data["train/warp_loss"] = loss_dict["warp_loss"]
                         log_data["train/warp_loss_weighted"] = loss_dict.get("warp_loss_weighted", loss_dict["warp_loss"])
+
+                    if "rgb_warp_loss" in loss_dict:
+                        log_data["train/rgb_warp_loss"] = loss_dict["rgb_warp_loss"]
+                        log_data["train/rgb_warp_loss_weighted"] = loss_dict.get("rgb_warp_loss_weighted", loss_dict["rgb_warp_loss"])
 
                     wandb.log(log_data, step=global_step)
 
@@ -1419,6 +1542,9 @@ def launch_training_task_with_wandb(
 
             if epoch_losses["warp_loss"]:
                 epoch_summary["epoch/warp_loss_avg"] = sum(epoch_losses["warp_loss"]) / len(epoch_losses["warp_loss"])
+
+            if epoch_losses["rgb_warp_loss"]:
+                epoch_summary["epoch/rgb_warp_loss_avg"] = sum(epoch_losses["rgb_warp_loss"]) / len(epoch_losses["rgb_warp_loss"])
 
             wandb.log(epoch_summary, step=global_step)
 
@@ -1456,6 +1582,13 @@ if __name__ == "__main__":
     if args.use_warp_loss:
         print(f"  Weight: {args.warp_loss_weight}")
         print(f"  Type: {args.warp_loss_type}")
+    print(f"RGB warp loss enabled: {args.use_rgb_warp_loss}")
+    if args.use_rgb_warp_loss:
+        print(f"  Weight: {args.rgb_warp_loss_weight}")
+        print(f"  Type: {args.rgb_warp_loss_type}")
+        print(f"  Use SSIM: {args.rgb_warp_use_ssim}")
+        if args.rgb_warp_use_ssim:
+            print(f"  SSIM weight: {args.rgb_warp_ssim_weight}")
     if args.use_spatiotemporal_depth:
         print(f"  Type: {args.spatiotemporal_depth_type}")
         print(f"  Temporal heads: {args.num_temporal_heads}")
@@ -1520,6 +1653,12 @@ if __name__ == "__main__":
         use_warp_loss=args.use_warp_loss,
         warp_loss_weight=args.warp_loss_weight,
         warp_loss_type=args.warp_loss_type,
+        # RGB warp loss parameters
+        use_rgb_warp_loss=args.use_rgb_warp_loss,
+        rgb_warp_loss_weight=args.rgb_warp_loss_weight,
+        rgb_warp_loss_type=args.rgb_warp_loss_type,
+        rgb_warp_use_ssim=args.rgb_warp_use_ssim,
+        rgb_warp_ssim_weight=args.rgb_warp_ssim_weight,
         # Spatio-temporal depth head parameters
         use_spatiotemporal_depth=args.use_spatiotemporal_depth,
         spatiotemporal_depth_type=args.spatiotemporal_depth_type,

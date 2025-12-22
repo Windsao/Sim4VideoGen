@@ -1,0 +1,178 @@
+_wandb:
+    value:
+        cli_version: 0.23.1
+        code_path: code/train_wan22_ti2v_motion_depth.py
+        e:
+            16nffno9x8sv32b6k68koy8s4943kj2z:
+                args:
+                    - --dataset_base_path
+                    - /nyx-storage1/hanliu/Sim_Physics/TestOutput
+                    - --dataset_metadata_path
+                    - /home/mzh1800/DiffSynth-Studio/data/sim_physics_metadata.csv
+                    - --dataset_repeat
+                    - "100"
+                    - --height
+                    - "480"
+                    - --width
+                    - "480"
+                    - --num_frames
+                    - "49"
+                    - --model_paths
+                    - '["/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B", "/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth", "/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth"]'
+                    - --tokenizer_path
+                    - /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/google/umt5-xxl
+                    - --output_path
+                    - /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1
+                    - --training_mode
+                    - heads_only
+                    - --motion_channels
+                    - "4"
+                    - --motion_loss_weight
+                    - "1.0"
+                    - --depth_loss_weight
+                    - "1.0"
+                    - --learning_rate
+                    - "1e-4"
+                    - --num_epochs
+                    - "10"
+                    - --batch_size
+                    - "1"
+                    - --gradient_accumulation_steps
+                    - "8"
+                    - --save_steps
+                    - "500"
+                    - --use_wandb
+                    - --wandb_project
+                    - wan22-ti2v-stage1-heads
+                codePath: train_wan22_ti2v_motion_depth.py
+                codePathLocal: train_wan22_ti2v_motion_depth.py
+                cpu_count: 48
+                cpu_count_logical: 48
+                cudaVersion: "13.1"
+                disk:
+                    /:
+                        total: "52403109888"
+                        used: "1325760512"
+                email: swu@u.northwestern.edu
+                executable: /nyx-storage1/hanliu/miniconda3/envs/diffsyn/bin/python3.10
+                git:
+                    commit: 06ff1fe25a233252a743ea2a1bb5e57f4e7b4c6e
+                    remote: https://github.com/Windsao/Sim4VideoGen.git
+                gpu: NVIDIA A40
+                gpu_count: 4
+                gpu_nvidia:
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA A40
+                      uuid: GPU-aec1446c-76cd-43ef-63fd-179ad68f1806
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA A40
+                      uuid: GPU-0dfaee79-a37e-0666-556f-c66e1ae3c4fa
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA A40
+                      uuid: GPU-97cad36c-c9a2-4c1f-a142-38a1b39c89f0
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA A40
+                      uuid: GPU-157261bc-52e8-c593-39b7-55d0b91873eb
+                host: hemera.cs.northwestern.edu
+                memory:
+                    total: "404373417984"
+                os: Linux-4.18.0-553.89.1.el8_10.x86_64-x86_64-with-glibc2.28
+                program: /home/mzh1800/DiffSynth-Studio/train_wan22_ti2v_motion_depth.py
+                python: CPython 3.10.18
+                root: /home/mzh1800/DiffSynth-Studio
+                startedAt: "2025-12-19T06:10:39.938212Z"
+                writerId: 16nffno9x8sv32b6k68koy8s4943kj2z
+        m: []
+        python_version: 3.10.18
+        t:
+            "1":
+                - 1
+                - 11
+                - 41
+                - 49
+                - 71
+                - 98
+            "2":
+                - 1
+                - 11
+                - 41
+                - 49
+                - 51
+                - 71
+                - 98
+            "3":
+                - 2
+                - 16
+            "4": 3.10.18
+            "5": 0.23.1
+            "6": 4.56.2
+            "12": 0.23.1
+            "13": linux-x86_64
+batch_size:
+    value: 1
+dataset_base_path:
+    value: /nyx-storage1/hanliu/Sim_Physics/TestOutput
+dataset_metadata_path:
+    value: /home/mzh1800/DiffSynth-Studio/data/sim_physics_metadata.csv
+dataset_repeat:
+    value: 100
+depth_head_checkpoint:
+    value: null
+depth_loss_type:
+    value: mse
+depth_loss_weight:
+    value: 1
+gradient_accumulation_steps:
+    value: 8
+height:
+    value: 480
+learning_rate:
+    value: 0.0001
+lora_checkpoint:
+    value: null
+lora_rank:
+    value: 32
+lora_target_modules:
+    value: q,k,v,o,ffn.0,ffn.2
+model_id_with_origin_paths:
+    value: null
+model_paths:
+    value: '[["/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00001-of-00003-bf16.safetensors", "/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00002-of-00003-bf16.safetensors", "/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00003-of-00003-bf16.safetensors"], "/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth", "/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth"]'
+motion_channels:
+    value: 4
+motion_head_checkpoint:
+    value: null
+motion_loss_type:
+    value: mse
+motion_loss_weight:
+    value: 1
+num_epochs:
+    value: 10
+num_frames:
+    value: 49
+output_path:
+    value: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1
+save_steps:
+    value: 500
+spatiotemporal_depth_type:
+    value: simple
+tokenizer_path:
+    value: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/google/umt5-xxl
+training_mode:
+    value: heads_only
+use_spatiotemporal_depth:
+    value: false
+use_wandb:
+    value: true
+wandb_project:
+    value: wan22-ti2v-stage1-heads
+width:
+    value: 480

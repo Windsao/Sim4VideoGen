@@ -59,6 +59,7 @@ class WanVideoPipeline(BasePipeline):
             WanVideoUnit_FunControl(),
             WanVideoUnit_FunReference(),
             WanVideoUnit_FunCameraControl(),
+            WanVideoUnit_DepthConditioner(),
             WanVideoUnit_SpeedControl(),
             WanVideoUnit_VACE(),
             WanVideoUnit_UnifiedSequenceParallel(),
@@ -390,6 +391,9 @@ class WanVideoPipeline(BasePipeline):
         input_image: Optional[Image.Image] = None,
         # First-last-frame-to-video
         end_image: Optional[Image.Image] = None,
+        # Depth conditioning
+        depth_image: Optional[Image.Image] = None,
+        depth_video: Optional[list[Image.Image]] = None,
         # Video-to-video
         input_video: Optional[list[Image.Image]] = None,
         denoising_strength: Optional[float] = 1.0,
@@ -457,6 +461,7 @@ class WanVideoPipeline(BasePipeline):
         inputs_shared = {
             "input_image": input_image,
             "end_image": end_image,
+            "depth_image": depth_image, "depth_video": depth_video,
             "input_video": input_video, "denoising_strength": denoising_strength,
             "control_video": control_video, "reference_image": reference_image,
             "camera_control_direction": camera_control_direction, "camera_control_speed": camera_control_speed, "camera_control_origin": camera_control_origin,
@@ -799,6 +804,51 @@ class WanVideoUnit_FunCameraControl(PipelineUnit):
 
 
 
+class WanVideoUnit_DepthConditioner(PipelineUnit):
+    def __init__(self):
+        super().__init__(
+            input_params=("depth_image", "depth_video", "num_frames", "height", "width", "tiled", "tile_size", "tile_stride"),
+            onload_model_names=("vae",)
+        )
+
+    def _normalize_depth_frame(self, frame: Image.Image, width: int, height: int) -> Image.Image:
+        if frame.mode != "RGB":
+            frame = frame.convert("RGB")
+        return frame.resize((width, height))
+
+    def process(self, pipe: WanVideoPipeline, depth_image, depth_video, num_frames, height, width, tiled, tile_size, tile_stride):
+        if depth_image is None and depth_video is None:
+            return {}
+        pipe.load_models_to_device(self.onload_model_names)
+
+        if depth_video is not None:
+            assert len(depth_video) == num_frames, f"depth video must have {num_frames} frames, but got {len(depth_video)}"
+            depth_video = [self._normalize_depth_frame(frame, width, height) for frame in depth_video]
+            depth_tensor = pipe.preprocess_video(depth_video)
+            depth_latents = pipe.vae.encode(depth_tensor, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride)
+        else:
+            depth_image = self._normalize_depth_frame(depth_image, width, height)
+            depth_tensor = pipe.preprocess_image(depth_image).to(pipe.device)
+            depth_video = torch.concat(
+                [
+                    depth_tensor.transpose(0, 1),
+                    torch.zeros(3, num_frames - 1, height, width, device=depth_tensor.device, dtype=depth_tensor.dtype),
+                ],
+                dim=1,
+            )
+            depth_latents = pipe.vae.encode(
+                [depth_video.to(dtype=pipe.torch_dtype, device=pipe.device)],
+                device=pipe.device,
+                tiled=tiled,
+                tile_size=tile_size,
+                tile_stride=tile_stride,
+            )[0]
+
+        depth_latents = depth_latents.to(dtype=pipe.torch_dtype, device=pipe.device)
+        return {"depth_latents": depth_latents}
+
+
+
 class WanVideoUnit_SpeedControl(PipelineUnit):
     def __init__(self):
         super().__init__(input_params=("motion_bucket_id",))
@@ -892,7 +942,7 @@ class WanVideoUnit_TeaCache(PipelineUnit):
 class WanVideoUnit_CfgMerger(PipelineUnit):
     def __init__(self):
         super().__init__(take_over=True)
-        self.concat_tensor_names = ["context", "clip_feature", "y", "reference_latents"]
+        self.concat_tensor_names = ["context", "clip_feature", "y", "reference_latents", "depth_latents"]
 
     def process(self, pipe: WanVideoPipeline, inputs_shared, inputs_posi, inputs_nega):
         if not inputs_shared["cfg_merge"]:
@@ -1118,6 +1168,7 @@ def model_fn_wan_video(
     context: torch.Tensor = None,
     clip_feature: Optional[torch.Tensor] = None,
     y: Optional[torch.Tensor] = None,
+    depth_latents: Optional[torch.Tensor] = None,
     reference_latents = None,
     vace_context = None,
     vace_scale = 1.0,
@@ -1147,6 +1198,7 @@ def model_fn_wan_video(
             context=context,
             clip_feature=clip_feature,
             y=y,
+            depth_latents=depth_latents,
             reference_latents=reference_latents,
             vace_context=vace_context,
             vace_scale=vace_scale,
@@ -1159,7 +1211,7 @@ def model_fn_wan_video(
             sliding_window_size, sliding_window_stride,
             latents.device, latents.dtype,
             model_kwargs=model_kwargs,
-            tensor_names=["latents", "y"],
+            tensor_names=["latents", "y", "depth_latents"],
             batch_size=2 if cfg_merge else 1
         )
     # wan2.2 s2v
@@ -1204,6 +1256,17 @@ def model_fn_wan_video(
     if motion_bucket_id is not None and motion_controller is not None:
         t_mod = t_mod + motion_controller(motion_bucket_id).unflatten(1, (6, dit.dim))
     context = dit.text_embedding(context)
+
+    if depth_latents is not None:
+        if depth_latents.shape[2:] != latents.shape[2:]:
+            raise ValueError(
+                f"depth_latents shape {depth_latents.shape} does not match latents shape {latents.shape}"
+            )
+        if y is not None and dit.require_vae_embedding and y.shape[1] >= depth_latents.shape[1]:
+            y = y.clone()
+            y[:, -depth_latents.shape[1]:] = y[:, -depth_latents.shape[1]:] + depth_latents
+        else:
+            latents = latents + depth_latents
 
     x = latents
     # Merged cfg
