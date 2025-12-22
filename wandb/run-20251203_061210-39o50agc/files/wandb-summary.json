@@ -1,1 +1,0 @@
-{"train/global_step":30,"train/noise_loss":0.01658323034644127,"_wandb":{"runtime":327},"train/epoch":0,"train/total_loss":0.126953125,"_runtime":327.495081529,"train/noise_loss_weighted":0.032548658549785614,"_timestamp":1.7647642257928784e+09,"_step":30,"train/depth_loss_weighted":0.126953125,"train/depth_loss":1.265625,"train/learning_rate":0.0001,"train/timestep":604}

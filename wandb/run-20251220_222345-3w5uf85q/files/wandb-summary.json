@@ -1,1 +1,0 @@
-{"train/motion_loss":0.007442669477313757,"train/total_loss":0.14459039270877838,"_runtime":8990,"_timestamp":1.766300016537764e+09,"_wandb":{"runtime":8990},"train/depth_loss":0.036876093596220016,"global_step":2625,"_step":2624,"train/noise_loss":0.06023913249373436}
