@@ -67,7 +67,7 @@ for scenario in "${!SCENARIOS[@]}"; do
     fi
 
     if [ ! -f "$OUTPUT_VIDEO_BASE" ]; then
-        python test_wan22_stage2_lora.py \
+        python eval_wan22_stage2_lora.py \
             --motion_head_checkpoint "$MOTION_HEAD" \
             --depth_head_checkpoint "$DEPTH_HEAD" \
             --input_image "$INPUT_IMAGE" \
