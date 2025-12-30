@@ -17,6 +17,9 @@ module load moose/1.0.0
 module load python-miniconda3/4.12.0
 module load cuda/12.0.1-gcc-12.3.0 
 
+conda init bash
+source ~/.bashrc
+
 conda activate /projects/p32294/conda_env/diffsyn
 
 cd /projects/p32294/Sim4VideoGen

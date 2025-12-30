@@ -4,4 +4,5 @@ test_*
 ./phygenbench_results
 wandb/
 *.pyc
- **/__pycache__/
+**/__pycache__/
+shang/
