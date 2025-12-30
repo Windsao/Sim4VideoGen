@@ -322,3 +322,27 @@ Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-fra
  94%|█████████▍| 47/50 [04:23<00:16,  5.57s/it][A
  96%|█████████▌| 48/50 [04:28<00:11,  5.58s/it][A
  98%|█████████▊| 49/50 [04:34<00:05,  5.59s/it][A
+100%|██████████| 50/50 [04:40<00:00,  5.58s/it][A100%|██████████| 50/50 [04:40<00:00,  5.60s/it]
+
+VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE decoding: 100%|██████████| 1/1 [00:17<00:00, 17.27s/it][AVAE decoding: 100%|██████████| 1/1 [00:17<00:00, 17.27s/it]
+
+Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+
+Saving video:   1%|          | 1/81 [00:00<00:17,  4.50it/s][A
+Saving video:  91%|█████████▏| 74/81 [00:00<00:00, 263.29it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 226.35it/s]
+Processing samples:   8%|▊         | 4/50 [20:41<3:58:46, 311.45s/it]✓ Generated in 313.76s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0004_perspective-left_trimmed-ball-behind-rotating-paper.mp4
+
+Processing 0005: 0005_perspective-center_take-1_trimmed-ball-behind...
+Prompt: A grabber arm is holding a tennis ball above a piece of cardstock propped up on a rotating platform ...
+Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0005_switch-frames_anyFPS_perspective-center_trimmed-ball-behind-rotating-paper.jpg
+
+VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE encoding: 100%|██████████| 1/1 [00:00<00:00,  7.55it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00,  7.54it/s]
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+  2%|▏         | 1/50 [00:07<05:44,  7.02s/it][A
+  4%|▍         | 2/50 [00:12<04:57,  6.20s/it][A

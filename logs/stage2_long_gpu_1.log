@@ -319,3 +319,27 @@ Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-fra
  90%|█████████ | 45/50 [04:10<00:27,  5.54s/it][A
  92%|█████████▏| 46/50 [04:15<00:22,  5.55s/it][A
  94%|█████████▍| 47/50 [04:21<00:16,  5.55s/it][A
+ 96%|█████████▌| 48/50 [04:27<00:11,  5.56s/it][A
+ 98%|█████████▊| 49/50 [04:32<00:05,  5.53s/it][A
+100%|██████████| 50/50 [04:38<00:00,  5.55s/it][A100%|██████████| 50/50 [04:38<00:00,  5.56s/it]
+
+VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE decoding: 100%|██████████| 1/1 [00:15<00:00, 15.56s/it][AVAE decoding: 100%|██████████| 1/1 [00:15<00:00, 15.56s/it]
+
+Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+
+Saving video:   1%|          | 1/81 [00:00<00:17,  4.48it/s][A
+Saving video: 100%|██████████| 81/81 [00:00<00:00, 313.58it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 249.40it/s]
+Processing samples:   8%|▊         | 4/50 [20:49<3:59:23, 312.26s/it]✓ Generated in 309.61s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0054_perspective-right_trimmed-double-cradle.mp4
+
+Processing 0055: 0055_perspective-left_take-1_trimmed-duck-and-domi...
+Prompt: A yellow rubber duck is positioned in the middle of a line of black and white dominoes on a wooden t...
+Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0055_switch-frames_anyFPS_perspective-left_trimmed-duck-and-dominos.jpg
+
+VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE encoding: 100%|██████████| 1/1 [00:00<00:00,  8.33it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00,  8.32it/s]
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
