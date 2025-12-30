@@ -1,0 +1,12 @@
+================================================================
+Physics-IQ WAN2.2 Stage 2 LoRA Inference Log
+Started at: Tue Dec 30 02:54:27 CST 2025
+================================================================
+Command: python inference_physics_iq_wan22.py --output_dir physics_iq_results_stage2 --model_name wan22_ti2v_stage2_lora --model_base_path /nyx-storage1/hanliu/world_model_ckpt --lora_checkpoint /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage2_spatio_depth_simple/final/lora_weights.pth --height 480 --width 832 --num_frames 81 --fps 16 --cfg_scale 7.0 --num_inference_steps 50 --seed 42 --device cuda
+================================================================
+
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/transformers/utils/hub.py:111: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+2025-12-30 02:54:36,297 - modelscope - INFO - Target directory already exists, skipping creation.

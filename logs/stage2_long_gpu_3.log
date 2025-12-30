@@ -1,0 +1,558 @@
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/transformers/utils/hub.py:111: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+============================================================
+Physics-IQ Wan2.2-TI2V-5B Inference Pipeline
+============================================================
+
+Configuration:
+  height: 480
+  width: 832
+  num_frames: 81
+  cfg_scale: 7.0
+  num_inference_steps: 50
+  fps: 16
+  seed: 42
+  quality: 5
+  tiled: True
+  resize_input: False
+  negative_prompt: blurry, low quality, distorted, static image, cartoon, animation
+
+Loading data from:
+  Images: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames
+  Descriptions: /nyx-storage1/hanliu/physics-IQ-benchmark/descriptions/descriptions.csv
+
+Found 198 valid samples with switch-frame images to process
+(Note: Only scenarios 0001-0198 have switch-frame images available)
+
+🔀 Shard 3/4: Processing samples 149 to 197 (49 samples)
+Loading Wan2.2-TI2V-5B model from local checkpoints...
+Using local checkpoint files from: /nyx-storage1/hanliu/world_model_ckpt
+Loading models from: ['/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00001-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00002-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00003-of-00003-bf16.safetensors']
+    model_name: wan_video_dit model_class: WanModel
+        This model is initialized with extra kwargs: {'has_image_input': False, 'patch_size': [1, 2, 2], 'in_dim': 48, 'dim': 3072, 'ffn_dim': 14336, 'freq_dim': 256, 'text_dim': 4096, 'out_dim': 48, 'num_heads': 24, 'num_layers': 30, 'eps': 1e-06, 'seperated_timestep': True, 'require_clip_embedding': False, 'require_vae_embedding': False, 'fuse_vae_embedding_in_latents': True}
+    The following models are loaded: ['wan_video_dit'].
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth
+    model_name: wan_video_text_encoder model_class: WanTextEncoder
+    The following models are loaded: ['wan_video_text_encoder'].
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth
+    model_name: wan_video_vae model_class: WanVideoVAE38
+    The following models are loaded: ['wan_video_vae'].
+Using wan_video_text_encoder from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth.
+Using wan_video_dit from ['/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00001-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00002-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00003-of-00003-bf16.safetensors'].
+Using wan_video_vae from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth.
+No wan_video_image_encoder models available.
+No wan_video_motion_controller models available.
+No wan_video_vace models available.
+No wans2v_audio_encoder models available.
+Loading LoRA checkpoint: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage2_spatio_depth_full_long/checkpoint-1000/lora_weights.pth
+300 tensors are updated by LoRA.
+
+Starting inference on 49 samples...
+============================================================
+Processing samples:   0%|          | 0/49 [00:00<?, ?it/s]
+Processing 0150: 0150_perspective-right_take-1_trimmed-roll-front-b...
+Prompt: A small white lampshade is on a light wood surface. A grey tennis ball rolls out of the black tube s...
+Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0150_switch-frames_anyFPS_perspective-right_trimmed-roll-front-box.jpg
+
+VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE encoding: 100%|██████████| 1/1 [00:00<00:00,  4.71it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00,  4.71it/s]
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+  2%|▏         | 1/50 [00:05<04:18,  5.27s/it][A
+  4%|▍         | 2/50 [00:07<03:00,  3.76s/it][A
+  6%|▌         | 3/50 [00:10<02:34,  3.28s/it][A
+  8%|▊         | 4/50 [00:13<02:20,  3.06s/it][A
+ 10%|█         | 5/50 [00:16<02:12,  2.94s/it][A
+ 12%|█▏        | 6/50 [00:18<02:06,  2.87s/it][A
+ 14%|█▍        | 7/50 [00:21<02:01,  2.82s/it][A
+ 16%|█▌        | 8/50 [00:24<01:57,  2.79s/it][A
+ 18%|█▊        | 9/50 [00:27<01:53,  2.77s/it][A
+ 20%|██        | 10/50 [00:29<01:50,  2.75s/it][A
+ 22%|██▏       | 11/50 [00:32<01:47,  2.75s/it][A
+ 24%|██▍       | 12/50 [00:35<01:44,  2.74s/it][A
+ 26%|██▌       | 13/50 [00:37<01:41,  2.73s/it][A
+ 28%|██▊       | 14/50 [00:40<01:38,  2.73s/it][A
+ 30%|███       | 15/50 [00:43<01:36,  2.75s/it][A
+ 32%|███▏      | 16/50 [00:46<01:33,  2.74s/it][A
+ 34%|███▍      | 17/50 [00:48<01:30,  2.74s/it][A
+ 36%|███▌      | 18/50 [00:51<01:27,  2.74s/it][A
+ 38%|███▊      | 19/50 [00:54<01:24,  2.74s/it][A
+ 40%|████      | 20/50 [00:57<01:22,  2.74s/it][A
+ 42%|████▏     | 21/50 [00:59<01:19,  2.74s/it][A
+ 44%|████▍     | 22/50 [01:02<01:16,  2.74s/it][A
+ 46%|████▌     | 23/50 [01:05<01:13,  2.74s/it][A
+ 48%|████▊     | 24/50 [01:08<01:11,  2.74s/it][A
+ 50%|█████     | 25/50 [01:10<01:08,  2.74s/it][A
+ 52%|█████▏    | 26/50 [01:13<01:05,  2.74s/it][A
+ 54%|█████▍    | 27/50 [01:16<01:03,  2.74s/it][A
+ 56%|█████▌    | 28/50 [01:19<01:00,  2.75s/it][A
+ 58%|█████▊    | 29/50 [01:21<00:57,  2.75s/it][A
+ 60%|██████    | 30/50 [01:24<00:54,  2.74s/it][A
+ 62%|██████▏   | 31/50 [01:27<00:52,  2.74s/it][A
+ 64%|██████▍   | 32/50 [01:30<00:49,  2.74s/it][A
+ 66%|██████▌   | 33/50 [01:32<00:46,  2.74s/it][A
+ 68%|██████▊   | 34/50 [01:35<00:43,  2.74s/it][A
+ 70%|███████   | 35/50 [01:38<00:41,  2.75s/it][A
+ 72%|███████▏  | 36/50 [01:41<00:38,  2.76s/it][A
+ 74%|███████▍  | 37/50 [01:43<00:35,  2.76s/it][A
+ 76%|███████▌  | 38/50 [01:46<00:33,  2.76s/it][A
+ 78%|███████▊  | 39/50 [01:49<00:30,  2.75s/it][A
+ 80%|████████  | 40/50 [01:52<00:27,  2.76s/it][A
+ 82%|████████▏ | 41/50 [01:54<00:24,  2.76s/it][A
+ 84%|████████▍ | 42/50 [01:57<00:22,  2.76s/it][A
+ 86%|████████▌ | 43/50 [02:00<00:19,  2.76s/it][A
+ 88%|████████▊ | 44/50 [02:03<00:16,  2.76s/it][A
+ 90%|█████████ | 45/50 [02:05<00:13,  2.76s/it][A
+ 92%|█████████▏| 46/50 [02:08<00:11,  2.75s/it][A
+ 94%|█████████▍| 47/50 [02:11<00:08,  2.76s/it][A
+ 96%|█████████▌| 48/50 [02:14<00:05,  2.76s/it][A
+ 98%|█████████▊| 49/50 [02:16<00:02,  2.76s/it][A
+100%|██████████| 50/50 [02:19<00:00,  2.76s/it][A100%|██████████| 50/50 [02:19<00:00,  2.79s/it]
+
+VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.83s/it][AVAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.83s/it]
+
+Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+
+Saving video:   1%|          | 1/81 [00:00<00:22,  3.53it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 211.94it/s]
+Processing samples:   2%|▏         | 1/49 [02:51<2:16:54, 171.13s/it]✓ Generated in 170.54s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0150_perspective-right_trimmed-roll-front-box.mp4
+
+Processing 0151: 0151_perspective-left_take-1_trimmed-roll-in-box.m...
+Prompt: An olive green fabric box is on a light wood surface. A brown tennis ball rolls out of the black tub...
+Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0151_switch-frames_anyFPS_perspective-left_trimmed-roll-in-box.jpg
+
+VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00, 12.65it/s]
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+  2%|▏         | 1/50 [00:03<03:02,  3.72s/it][A
+  4%|▍         | 2/50 [00:06<02:30,  3.14s/it][A
+  6%|▌         | 3/50 [00:09<02:18,  2.95s/it][A
+  8%|▊         | 4/50 [00:11<02:12,  2.87s/it][A
+ 10%|█         | 5/50 [00:14<02:07,  2.82s/it][A
+ 12%|█▏        | 6/50 [00:17<02:03,  2.80s/it][A
+ 14%|█▍        | 7/50 [00:20<01:59,  2.78s/it][A
+ 16%|█▌        | 8/50 [00:22<01:56,  2.77s/it][A
+ 18%|█▊        | 9/50 [00:25<01:53,  2.76s/it][A
+ 20%|██        | 10/50 [00:28<01:50,  2.75s/it][A
+ 22%|██▏       | 11/50 [00:31<01:47,  2.75s/it][A
+ 24%|██▍       | 12/50 [00:33<01:44,  2.76s/it][A
+ 26%|██▌       | 13/50 [00:36<01:41,  2.75s/it][A
+ 28%|██▊       | 14/50 [00:39<01:39,  2.75s/it][A
+ 30%|███       | 15/50 [00:42<01:36,  2.75s/it][A
+ 32%|███▏      | 16/50 [00:44<01:33,  2.75s/it][A
+ 34%|███▍      | 17/50 [00:47<01:30,  2.75s/it][A
+ 36%|███▌      | 18/50 [00:50<01:27,  2.75s/it][A
+ 38%|███▊      | 19/50 [00:53<01:25,  2.75s/it][A
+ 40%|████      | 20/50 [00:55<01:22,  2.74s/it][A
+ 42%|████▏     | 21/50 [00:58<01:19,  2.74s/it][A
+ 44%|████▍     | 22/50 [01:01<01:16,  2.75s/it][A
+ 46%|████▌     | 23/50 [01:04<01:14,  2.75s/it][A
+ 48%|████▊     | 24/50 [01:06<01:11,  2.75s/it][A
+ 50%|█████     | 25/50 [01:09<01:08,  2.75s/it][A
+ 52%|█████▏    | 26/50 [01:12<01:06,  2.75s/it][A
+ 54%|█████▍    | 27/50 [01:15<01:03,  2.75s/it][A
+ 56%|█████▌    | 28/50 [01:17<01:00,  2.75s/it][A
+ 58%|█████▊    | 29/50 [01:20<00:57,  2.75s/it][A
+ 60%|██████    | 30/50 [01:23<00:54,  2.75s/it][A
+ 62%|██████▏   | 31/50 [01:26<00:52,  2.75s/it][A
+ 64%|██████▍   | 32/50 [01:28<00:49,  2.75s/it][A
+ 66%|██████▌   | 33/50 [01:31<00:46,  2.75s/it][A
+ 68%|██████▊   | 34/50 [01:34<00:44,  2.75s/it][A
+ 70%|███████   | 35/50 [01:37<00:41,  2.75s/it][A
+ 72%|███████▏  | 36/50 [01:39<00:38,  2.75s/it][A
+ 74%|███████▍  | 37/50 [01:42<00:35,  2.75s/it][A
+ 76%|███████▌  | 38/50 [01:45<00:33,  2.76s/it][A
+ 78%|███████▊  | 39/50 [01:48<00:30,  2.76s/it][A
+ 80%|████████  | 40/50 [01:50<00:27,  2.76s/it][A
+ 82%|████████▏ | 41/50 [01:53<00:24,  2.76s/it][A
+ 84%|████████▍ | 42/50 [01:56<00:22,  2.75s/it][A
+ 86%|████████▌ | 43/50 [01:59<00:19,  2.76s/it][A
+ 88%|████████▊ | 44/50 [02:02<00:16,  2.78s/it][A
+ 90%|█████████ | 45/50 [02:04<00:13,  2.78s/it][A
+ 92%|█████████▏| 46/50 [02:07<00:11,  2.79s/it][A
+ 94%|█████████▍| 47/50 [02:10<00:08,  2.80s/it][A
+ 96%|█████████▌| 48/50 [02:13<00:05,  2.79s/it][A
+ 98%|█████████▊| 49/50 [02:15<00:02,  2.78s/it][A
+100%|██████████| 50/50 [02:18<00:00,  2.77s/it][A100%|██████████| 50/50 [02:18<00:00,  2.77s/it]
+
+VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.84s/it][AVAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.84s/it]
+
+Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+
+Saving video:   1%|          | 1/81 [00:00<00:17,  4.61it/s][A
+Saving video:  78%|███████▊  | 63/81 [00:00<00:00, 248.35it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 217.16it/s]
+Processing samples:   4%|▍         | 2/49 [05:39<2:12:45, 169.47s/it]✓ Generated in 167.71s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0151_perspective-left_trimmed-roll-in-box.mp4
+
+Processing 0152: 0152_perspective-center_take-1_trimmed-roll-in-box...
+Prompt: An olive green fabric box is on a light wood surface. A brown tennis ball rolls out of the black tub...
+Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0152_switch-frames_anyFPS_perspective-center_trimmed-roll-in-box.jpg
+
+VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00, 13.82it/s]
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+  2%|▏         | 1/50 [00:03<03:02,  3.73s/it][A
+  4%|▍         | 2/50 [00:06<02:30,  3.14s/it][A
+  6%|▌         | 3/50 [00:09<02:18,  2.96s/it][A
+  8%|▊         | 4/50 [00:11<02:12,  2.88s/it][A
+ 10%|█         | 5/50 [00:14<02:07,  2.83s/it][A
+ 12%|█▏        | 6/50 [00:17<02:03,  2.80s/it][A
+ 14%|█▍        | 7/50 [00:20<01:59,  2.78s/it][A
+ 16%|█▌        | 8/50 [00:22<01:56,  2.77s/it][A
+ 18%|█▊        | 9/50 [00:25<01:53,  2.76s/it][A
+ 20%|██        | 10/50 [00:28<01:50,  2.75s/it][A
+ 22%|██▏       | 11/50 [00:31<01:47,  2.75s/it][A
+ 24%|██▍       | 12/50 [00:33<01:44,  2.75s/it][A
+ 26%|██▌       | 13/50 [00:36<01:41,  2.75s/it][A
+ 28%|██▊       | 14/50 [00:39<01:38,  2.74s/it][A
+ 30%|███       | 15/50 [00:42<01:36,  2.74s/it][A
+ 32%|███▏      | 16/50 [00:44<01:33,  2.74s/it][A
+ 34%|███▍      | 17/50 [00:47<01:30,  2.75s/it][A
+ 36%|███▌      | 18/50 [00:50<01:27,  2.75s/it][A
+ 38%|███▊      | 19/50 [00:53<01:25,  2.75s/it][A
+ 40%|████      | 20/50 [00:55<01:22,  2.75s/it][A
+ 42%|████▏     | 21/50 [00:58<01:19,  2.75s/it][A
+ 44%|████▍     | 22/50 [01:01<01:16,  2.75s/it][A
+ 46%|████▌     | 23/50 [01:04<01:14,  2.75s/it][A
+ 48%|████▊     | 24/50 [01:06<01:11,  2.75s/it][A
+ 50%|█████     | 25/50 [01:09<01:08,  2.75s/it][A
+ 52%|█████▏    | 26/50 [01:12<01:05,  2.75s/it][A
+ 54%|█████▍    | 27/50 [01:15<01:03,  2.75s/it][A
+ 56%|█████▌    | 28/50 [01:17<01:00,  2.75s/it][A
+ 58%|█████▊    | 29/50 [01:20<00:57,  2.76s/it][A
+ 60%|██████    | 30/50 [01:23<00:55,  2.76s/it][A
+ 62%|██████▏   | 31/50 [01:26<00:52,  2.76s/it][A
+ 64%|██████▍   | 32/50 [01:28<00:49,  2.76s/it][A
+ 66%|██████▌   | 33/50 [01:31<00:47,  2.77s/it][A
+ 68%|██████▊   | 34/50 [01:34<00:44,  2.78s/it][A
+ 70%|███████   | 35/50 [01:37<00:41,  2.77s/it][A
+ 72%|███████▏  | 36/50 [01:39<00:38,  2.76s/it][A
+ 74%|███████▍  | 37/50 [01:42<00:35,  2.77s/it][A
+ 76%|███████▌  | 38/50 [01:45<00:33,  2.76s/it][A
+ 78%|███████▊  | 39/50 [01:48<00:30,  2.76s/it][A
+ 80%|████████  | 40/50 [01:51<00:27,  2.76s/it][A
+ 82%|████████▏ | 41/50 [01:53<00:24,  2.77s/it][A
+ 84%|████████▍ | 42/50 [01:56<00:22,  2.78s/it][A
+ 86%|████████▌ | 43/50 [01:59<00:19,  2.78s/it][A
+ 88%|████████▊ | 44/50 [02:02<00:16,  2.77s/it][A
+ 90%|█████████ | 45/50 [02:04<00:13,  2.76s/it][A
+ 92%|█████████▏| 46/50 [02:07<00:11,  2.76s/it][A
+ 94%|█████████▍| 47/50 [02:10<00:08,  2.76s/it][A
+ 96%|█████████▌| 48/50 [02:13<00:05,  2.75s/it][A
+ 98%|█████████▊| 49/50 [02:15<00:02,  2.75s/it][A
+100%|██████████| 50/50 [02:18<00:00,  2.75s/it][A100%|██████████| 50/50 [02:18<00:00,  2.77s/it]
+
+VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.71s/it][AVAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.71s/it]
+
+Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+
+Saving video:   1%|          | 1/81 [00:00<00:16,  5.00it/s][A
+Saving video:  84%|████████▍ | 68/81 [00:00<00:00, 281.63it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 255.02it/s]
+Processing samples:   6%|▌         | 3/49 [08:27<2:09:17, 168.65s/it]✓ Generated in 167.13s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0152_perspective-center_trimmed-roll-in-box.mp4
+
+Processing 0153: 0153_perspective-right_take-1_trimmed-roll-in-box....
+Prompt: An olive green fabric box is on a light wood surface. A brown tennis ball rolls out of the black tub...
+Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0153_switch-frames_anyFPS_perspective-right_trimmed-roll-in-box.jpg
+
+VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00, 13.92it/s]
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+  2%|▏         | 1/50 [00:03<03:06,  3.81s/it][A
+  4%|▍         | 2/50 [00:06<02:32,  3.18s/it][A
+  6%|▌         | 3/50 [00:09<02:20,  2.99s/it][A
+  8%|▊         | 4/50 [00:12<02:12,  2.89s/it][A
+ 10%|█         | 5/50 [00:14<02:08,  2.85s/it][A
+ 12%|█▏        | 6/50 [00:17<02:03,  2.81s/it][A
+ 14%|█▍        | 7/50 [00:20<01:59,  2.79s/it][A
+ 16%|█▌        | 8/50 [00:23<01:56,  2.77s/it][A
+ 18%|█▊        | 9/50 [00:25<01:53,  2.76s/it][A
+ 20%|██        | 10/50 [00:28<01:50,  2.76s/it][A
+ 22%|██▏       | 11/50 [00:31<01:47,  2.75s/it][A
+ 24%|██▍       | 12/50 [00:34<01:44,  2.75s/it][A
+ 26%|██▌       | 13/50 [00:36<01:42,  2.77s/it][A
+ 28%|██▊       | 14/50 [00:39<01:40,  2.78s/it][A
+ 30%|███       | 15/50 [00:42<01:37,  2.78s/it][A
+ 32%|███▏      | 16/50 [00:45<01:34,  2.79s/it][A
+ 34%|███▍      | 17/50 [00:48<01:32,  2.79s/it][A
+ 36%|███▌      | 18/50 [00:50<01:29,  2.80s/it][A
+ 38%|███▊      | 19/50 [00:53<01:26,  2.80s/it][A
+ 40%|████      | 20/50 [00:56<01:24,  2.80s/it][A
+ 42%|████▏     | 21/50 [00:59<01:21,  2.80s/it][A
+ 44%|████▍     | 22/50 [01:02<01:18,  2.80s/it][A
+ 46%|████▌     | 23/50 [01:04<01:15,  2.81s/it][A
+ 48%|████▊     | 24/50 [01:07<01:13,  2.81s/it][A
+ 50%|█████     | 25/50 [01:10<01:10,  2.80s/it][A
+ 52%|█████▏    | 26/50 [01:13<01:07,  2.80s/it][A
+ 54%|█████▍    | 27/50 [01:16<01:04,  2.79s/it][A
+ 56%|█████▌    | 28/50 [01:18<01:01,  2.78s/it][A
+ 58%|█████▊    | 29/50 [01:21<00:58,  2.77s/it][A
+ 60%|██████    | 30/50 [01:24<00:55,  2.77s/it][A
+ 62%|██████▏   | 31/50 [01:27<00:52,  2.76s/it][A
+ 64%|██████▍   | 32/50 [01:29<00:49,  2.76s/it][A
+ 66%|██████▌   | 33/50 [01:32<00:46,  2.76s/it][A
+ 68%|██████▊   | 34/50 [01:35<00:44,  2.76s/it][A
+ 70%|███████   | 35/50 [01:38<00:41,  2.75s/it][A
+ 72%|███████▏  | 36/50 [01:40<00:38,  2.77s/it][A
+ 74%|███████▍  | 37/50 [01:43<00:36,  2.78s/it][A
+ 76%|███████▌  | 38/50 [01:46<00:33,  2.80s/it][A
+ 78%|███████▊  | 39/50 [01:49<00:30,  2.80s/it][A
+ 80%|████████  | 40/50 [01:52<00:27,  2.79s/it][A
+ 82%|████████▏ | 41/50 [01:54<00:24,  2.78s/it][A
+ 84%|████████▍ | 42/50 [01:57<00:22,  2.77s/it][A
+ 86%|████████▌ | 43/50 [02:00<00:19,  2.76s/it][A
+ 88%|████████▊ | 44/50 [02:03<00:16,  2.76s/it][A
+ 90%|█████████ | 45/50 [02:05<00:13,  2.76s/it][A
+ 92%|█████████▏| 46/50 [02:08<00:11,  2.76s/it][A
+ 94%|█████████▍| 47/50 [02:11<00:08,  2.76s/it][A
+ 96%|█████████▌| 48/50 [02:14<00:05,  2.75s/it][A
+ 98%|█████████▊| 49/50 [02:16<00:02,  2.75s/it][A
+100%|██████████| 50/50 [02:19<00:00,  2.75s/it][A100%|██████████| 50/50 [02:19<00:00,  2.79s/it]
+
+VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.71s/it][AVAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.71s/it]
+
+Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+
+Saving video:   1%|          | 1/81 [00:00<00:15,  5.04it/s][A
+Saving video:  91%|█████████▏| 74/81 [00:00<00:00, 302.56it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 251.44it/s]
+Processing samples:   8%|▊         | 4/49 [11:15<2:06:29, 168.66s/it]✓ Generated in 168.11s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0153_perspective-right_trimmed-roll-in-box.mp4
+
+Processing 0154: 0154_perspective-left_take-1_trimmed-rolling-refle...
+Prompt: A 30lb kettlebell resting on a wooden table next to a mirror. A tennis ball rolls towards the kettle...
+Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0154_switch-frames_anyFPS_perspective-left_trimmed-rolling-reflection.jpg
+
+VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00, 13.13it/s]
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+  2%|▏         | 1/50 [00:04<03:32,  4.34s/it][A
+  4%|▍         | 2/50 [00:07<02:42,  3.39s/it][A
+  6%|▌         | 3/50 [00:09<02:26,  3.11s/it][A
+  8%|▊         | 4/50 [00:12<02:16,  2.98s/it][A
+ 10%|█         | 5/50 [00:15<02:10,  2.90s/it][A
+ 12%|█▏        | 6/50 [00:18<02:05,  2.85s/it][A
+ 14%|█▍        | 7/50 [00:20<02:00,  2.81s/it][A
+ 16%|█▌        | 8/50 [00:23<01:57,  2.79s/it][A
+ 18%|█▊        | 9/50 [00:26<01:53,  2.77s/it][A
+ 20%|██        | 10/50 [00:29<01:50,  2.77s/it][A
+ 22%|██▏       | 11/50 [00:31<01:47,  2.76s/it][A
+ 24%|██▍       | 12/50 [00:34<01:44,  2.75s/it][A
+ 26%|██▌       | 13/50 [00:37<01:41,  2.75s/it][A
+ 28%|██▊       | 14/50 [00:40<01:38,  2.75s/it][A
+ 30%|███       | 15/50 [00:42<01:36,  2.75s/it][A
+ 32%|███▏      | 16/50 [00:45<01:33,  2.75s/it][A
+ 34%|███▍      | 17/50 [00:48<01:30,  2.74s/it][A
+ 36%|███▌      | 18/50 [00:51<01:27,  2.74s/it][A
+ 38%|███▊      | 19/50 [00:53<01:25,  2.75s/it][A
+ 40%|████      | 20/50 [00:56<01:22,  2.75s/it][A
+ 42%|████▏     | 21/50 [00:59<01:19,  2.75s/it][A
+ 44%|████▍     | 22/50 [01:02<01:17,  2.75s/it][A
+ 46%|████▌     | 23/50 [01:04<01:14,  2.76s/it][A
+ 48%|████▊     | 24/50 [01:07<01:11,  2.75s/it][A
+ 50%|█████     | 25/50 [01:10<01:08,  2.75s/it][A
+ 52%|█████▏    | 26/50 [01:13<01:06,  2.75s/it][A
+ 54%|█████▍    | 27/50 [01:15<01:03,  2.75s/it][A
+ 56%|█████▌    | 28/50 [01:18<01:00,  2.75s/it][A
+ 58%|█████▊    | 29/50 [01:21<00:57,  2.75s/it][A
+ 60%|██████    | 30/50 [01:24<00:54,  2.75s/it][A
+ 62%|██████▏   | 31/50 [01:26<00:52,  2.75s/it][A
+ 64%|██████▍   | 32/50 [01:29<00:49,  2.75s/it][A
+ 66%|██████▌   | 33/50 [01:32<00:46,  2.75s/it][A
+ 68%|██████▊   | 34/50 [01:35<00:43,  2.75s/it][A
+ 70%|███████   | 35/50 [01:37<00:41,  2.75s/it][A
+ 72%|███████▏  | 36/50 [01:40<00:38,  2.75s/it][A
+ 74%|███████▍  | 37/50 [01:43<00:35,  2.76s/it][A
+ 76%|███████▌  | 38/50 [01:46<00:33,  2.77s/it][A
+ 78%|███████▊  | 39/50 [01:48<00:30,  2.78s/it][A
+ 80%|████████  | 40/50 [01:51<00:27,  2.79s/it][A
+ 82%|████████▏ | 41/50 [01:54<00:25,  2.80s/it][A
+ 84%|████████▍ | 42/50 [01:57<00:22,  2.79s/it][A
+ 86%|████████▌ | 43/50 [02:00<00:19,  2.80s/it][A
+ 88%|████████▊ | 44/50 [02:02<00:16,  2.80s/it][A
+ 90%|█████████ | 45/50 [02:05<00:14,  2.80s/it][A
+ 92%|█████████▏| 46/50 [02:08<00:11,  2.80s/it][A
+ 94%|█████████▍| 47/50 [02:11<00:08,  2.80s/it][A
+ 96%|█████████▌| 48/50 [02:14<00:05,  2.80s/it][A
+ 98%|█████████▊| 49/50 [02:16<00:02,  2.80s/it][A
+100%|██████████| 50/50 [02:19<00:00,  2.79s/it][A100%|██████████| 50/50 [02:19<00:00,  2.79s/it]
+
+VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.78s/it][AVAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.78s/it]
+
+Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+
+Saving video:   1%|          | 1/81 [00:00<00:16,  4.87it/s][A
+Saving video:  89%|████████▉ | 72/81 [00:00<00:00, 293.88it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 254.27it/s]
+Processing samples:  10%|█         | 5/49 [14:04<2:03:34, 168.51s/it]✓ Generated in 167.72s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0154_perspective-left_trimmed-rolling-reflection.mp4
+
+Processing 0155: 0155_perspective-center_take-1_trimmed-rolling-ref...
+Prompt: A 30lb kettlebell resting on a wooden table next to a mirror. A tennis ball rolls towards the kettle...
+Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0155_switch-frames_anyFPS_perspective-center_trimmed-rolling-reflection.jpg
+
+VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE encoding: 100%|██████████| 1/1 [00:00<00:00,  8.23it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00,  8.21it/s]
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+  2%|▏         | 1/50 [00:04<03:28,  4.26s/it][A
+  4%|▍         | 2/50 [00:06<02:41,  3.36s/it][A
+  6%|▌         | 3/50 [00:09<02:24,  3.08s/it][A
+  8%|▊         | 4/50 [00:12<02:15,  2.94s/it][A
+ 10%|█         | 5/50 [00:15<02:09,  2.87s/it][A
+ 12%|█▏        | 6/50 [00:17<02:04,  2.82s/it][A
+ 14%|█▍        | 7/50 [00:20<02:00,  2.80s/it][A
+ 16%|█▌        | 8/50 [00:23<01:56,  2.78s/it][A
+ 18%|█▊        | 9/50 [00:26<01:53,  2.77s/it][A
+ 20%|██        | 10/50 [00:28<01:50,  2.76s/it][A
+ 22%|██▏       | 11/50 [00:31<01:47,  2.76s/it][A
+ 24%|██▍       | 12/50 [00:34<01:44,  2.75s/it][A
+ 26%|██▌       | 13/50 [00:37<01:42,  2.76s/it][A
+ 28%|██▊       | 14/50 [00:39<01:39,  2.75s/it][A
+ 30%|███       | 15/50 [00:42<01:36,  2.75s/it][A
+ 32%|███▏      | 16/50 [00:45<01:33,  2.75s/it][A
+ 34%|███▍      | 17/50 [00:48<01:30,  2.75s/it][A
+ 36%|███▌      | 18/50 [00:50<01:28,  2.75s/it][A
+ 38%|███▊      | 19/50 [00:53<01:25,  2.75s/it][A
+ 40%|████      | 20/50 [00:56<01:22,  2.75s/it][A
+ 42%|████▏     | 21/50 [00:59<01:19,  2.75s/it][A
+ 44%|████▍     | 22/50 [01:01<01:17,  2.75s/it][A
+ 46%|████▌     | 23/50 [01:04<01:14,  2.75s/it][A
+ 48%|████▊     | 24/50 [01:07<01:11,  2.75s/it][A
+ 50%|█████     | 25/50 [01:10<01:08,  2.75s/it][A
+ 52%|█████▏    | 26/50 [01:12<01:06,  2.76s/it][A
+ 54%|█████▍    | 27/50 [01:15<01:03,  2.77s/it][A
+ 56%|█████▌    | 28/50 [01:18<01:00,  2.76s/it][A
+ 58%|█████▊    | 29/50 [01:21<00:57,  2.76s/it][A
+ 60%|██████    | 30/50 [01:24<00:55,  2.78s/it][A
+ 62%|██████▏   | 31/50 [01:26<00:52,  2.78s/it][A
+ 64%|██████▍   | 32/50 [01:29<00:49,  2.77s/it][A
+ 66%|██████▌   | 33/50 [01:32<00:47,  2.77s/it][A
+ 68%|██████▊   | 34/50 [01:35<00:44,  2.76s/it][A
+ 70%|███████   | 35/50 [01:37<00:41,  2.76s/it][A
+ 72%|███████▏  | 36/50 [01:40<00:38,  2.76s/it][A
+ 74%|███████▍  | 37/50 [01:43<00:35,  2.76s/it][A
+ 76%|███████▌  | 38/50 [01:46<00:33,  2.76s/it][A
+ 78%|███████▊  | 39/50 [01:48<00:30,  2.76s/it][A
+ 80%|████████  | 40/50 [01:51<00:27,  2.77s/it][A
+ 82%|████████▏ | 41/50 [01:54<00:25,  2.78s/it][A
+ 84%|████████▍ | 42/50 [01:57<00:22,  2.79s/it][A
+ 86%|████████▌ | 43/50 [02:00<00:19,  2.80s/it][A
+ 88%|████████▊ | 44/50 [02:02<00:16,  2.80s/it][A
+ 90%|█████████ | 45/50 [02:05<00:13,  2.80s/it][A
+ 92%|█████████▏| 46/50 [02:08<00:11,  2.80s/it][A
+ 94%|█████████▍| 47/50 [02:11<00:08,  2.80s/it][A
+ 96%|█████████▌| 48/50 [02:14<00:05,  2.80s/it][A
+ 98%|█████████▊| 49/50 [02:16<00:02,  2.79s/it][A
+100%|██████████| 50/50 [02:19<00:00,  2.78s/it][A100%|██████████| 50/50 [02:19<00:00,  2.79s/it]
+
+VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.75s/it][AVAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.75s/it]
+
+Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+
+Saving video:   1%|          | 1/81 [00:00<00:16,  4.82it/s][A
+Saving video:  89%|████████▉ | 72/81 [00:00<00:00, 291.57it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 249.50it/s]
+Processing samples:  12%|█▏        | 6/49 [16:52<2:00:46, 168.53s/it]✓ Generated in 168.08s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0155_perspective-center_trimmed-rolling-reflection.mp4
+
+Processing 0156: 0156_perspective-right_take-1_trimmed-rolling-refl...
+Prompt: A 30lb kettlebell resting on a wooden table next to a mirror. A tennis ball rolls towards the kettle...
+Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0156_switch-frames_anyFPS_perspective-right_trimmed-rolling-reflection.jpg
+
+VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00, 10.96it/s]
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+  2%|▏         | 1/50 [00:03<03:04,  3.77s/it][A
+  4%|▍         | 2/50 [00:06<02:32,  3.17s/it][A
+  6%|▌         | 3/50 [00:09<02:19,  2.98s/it][A
+  8%|▊         | 4/50 [00:12<02:12,  2.89s/it][A
+ 10%|█         | 5/50 [00:14<02:07,  2.84s/it][A
+ 12%|█▏        | 6/50 [00:17<02:03,  2.81s/it][A
+ 14%|█▍        | 7/50 [00:20<01:59,  2.79s/it][A
+ 16%|█▌        | 8/50 [00:23<01:56,  2.77s/it][A
+ 18%|█▊        | 9/50 [00:25<01:53,  2.77s/it][A
+ 20%|██        | 10/50 [00:28<01:50,  2.76s/it][A
+ 22%|██▏       | 11/50 [00:31<01:47,  2.76s/it][A
+ 24%|██▍       | 12/50 [00:33<01:44,  2.75s/it][A
+ 26%|██▌       | 13/50 [00:36<01:41,  2.75s/it][A
+ 28%|██▊       | 14/50 [00:39<01:39,  2.75s/it][A
+ 30%|███       | 15/50 [00:42<01:36,  2.75s/it][A
+ 32%|███▏      | 16/50 [00:44<01:33,  2.75s/it][A
+ 34%|███▍      | 17/50 [00:47<01:30,  2.75s/it][A
+ 36%|███▌      | 18/50 [00:50<01:28,  2.75s/it][A
+ 38%|███▊      | 19/50 [00:53<01:25,  2.75s/it][A
+ 40%|████      | 20/50 [00:56<01:22,  2.75s/it][A
+ 42%|████▏     | 21/50 [00:58<01:19,  2.75s/it][A
+ 44%|████▍     | 22/50 [01:01<01:16,  2.75s/it][A
+ 46%|████▌     | 23/50 [01:04<01:14,  2.75s/it][A
+ 48%|████▊     | 24/50 [01:07<01:11,  2.75s/it][A
+ 50%|█████     | 25/50 [01:09<01:08,  2.75s/it][A
+ 52%|█████▏    | 26/50 [01:12<01:06,  2.75s/it][A
+ 54%|█████▍    | 27/50 [01:15<01:03,  2.75s/it][A
+ 56%|█████▌    | 28/50 [01:18<01:00,  2.75s/it][A
+ 58%|█████▊    | 29/50 [01:20<00:57,  2.75s/it][A
+ 60%|██████    | 30/50 [01:23<00:55,  2.75s/it][A
+ 62%|██████▏   | 31/50 [01:26<00:52,  2.75s/it][A
+ 64%|██████▍   | 32/50 [01:29<00:49,  2.75s/it][A
+ 66%|██████▌   | 33/50 [01:31<00:46,  2.75s/it][A
+ 68%|██████▊   | 34/50 [01:34<00:44,  2.75s/it][A
+ 70%|███████   | 35/50 [01:37<00:41,  2.75s/it][A
+ 72%|███████▏  | 36/50 [01:40<00:38,  2.75s/it][A
+ 74%|███████▍  | 37/50 [01:42<00:35,  2.75s/it][A
+ 76%|███████▌  | 38/50 [01:45<00:33,  2.75s/it][A
+ 78%|███████▊  | 39/50 [01:48<00:30,  2.75s/it][A
+ 80%|████████  | 40/50 [01:51<00:27,  2.75s/it][A
+ 82%|████████▏ | 41/50 [01:53<00:24,  2.75s/it][A
+ 84%|████████▍ | 42/50 [01:56<00:22,  2.75s/it][A
+ 86%|████████▌ | 43/50 [01:59<00:19,  2.75s/it][A
+ 88%|████████▊ | 44/50 [02:02<00:16,  2.75s/it][A
+ 90%|█████████ | 45/50 [02:04<00:13,  2.75s/it][A
+ 92%|█████████▏| 46/50 [02:07<00:11,  2.75s/it][A
+ 94%|█████████▍| 47/50 [02:10<00:08,  2.75s/it][A
+ 96%|█████████▌| 48/50 [02:13<00:05,  2.75s/it][A
+ 98%|█████████▊| 49/50 [02:15<00:02,  2.75s/it][A
+100%|██████████| 50/50 [02:18<00:00,  2.75s/it][A100%|██████████| 50/50 [02:18<00:00,  2.77s/it]
+
+VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
+VAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.83s/it][AVAE decoding: 100%|██████████| 1/1 [00:08<00:00,  8.83s/it]
+
+Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+
+Saving video:   1%|          | 1/81 [00:00<00:18,  4.38it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 248.16it/s]
+Processing samples:  14%|█▍        | 7/49 [19:40<1:57:49, 168.32s/it]✓ Generated in 167.35s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0156_perspective-right_trimmed-rolling-reflection.mp4
+
+Processing 0157: 0157_perspective-left_take-1_trimmed-silk-cover.mp...
+Prompt: A teapot is placed on a wooden table. a piece of silk fabric is lowered on the teapot to cover it. S...
+Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0157_switch-frames_anyFPS_perspective-left_trimmed-silk-cover.jpg
+
+VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00, 10.60it/s]
+
+  0%|          | 0/50 [00:00<?, ?it/s][A
+  2%|▏         | 1/50 [00:03<03:06,  3.81s/it][A
+  4%|▍         | 2/50 [00:06<02:32,  3.18s/it][A
+  6%|▌         | 3/50 [00:09<02:19,  2.98s/it][A
+  8%|▊         | 4/50 [00:12<02:12,  2.88s/it][A
+ 10%|█         | 5/50 [00:14<02:07,  2.83s/it][A
+ 12%|█▏        | 6/50 [00:17<02:03,  2.80s/it][A
+ 14%|█▍        | 7/50 [00:20<01:59,  2.78s/it][A

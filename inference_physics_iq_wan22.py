@@ -6,10 +6,12 @@ Processes images and prompts from the physics-IQ-benchmark dataset
 
 import os
 import csv
+import glob
 import torch
 import time
 from pathlib import Path
 from diffsynth import save_video, load_state_dict
+from diffsynth.lora import GeneralLoRALoader
 from diffsynth.pipelines.wan_video_new import WanVideoPipeline, ModelConfig
 from tqdm import tqdm
 import argparse
@@ -78,33 +80,57 @@ def load_prompts_and_images(descriptions_path, switch_frames_path, max_samples=N
 
     return data
 
-def load_wan22_pipeline(device="cuda"):
+def resolve_wan22_paths(model_base_path: str):
+    wan22_root = f"{model_base_path}/Wan-AI/Wan2.2-TI2V-5B"
+    wan22_dit_dir = wan22_root
+    nested_dir = f"{wan22_root}/Wan-AI/Wan2___2-TI2V-5B"
+    if Path(nested_dir).is_dir():
+        wan22_dit_dir = nested_dir
+    t5_path = f"{wan22_root}/models_t5_umt5-xxl-enc-bf16.pth"
+    if not Path(t5_path).exists() and Path(nested_dir).is_dir():
+        t5_path = f"{nested_dir}/models_t5_umt5-xxl-enc-bf16.pth"
+    vae_path = f"{wan22_root}/Wan2.2_VAE.pth"
+    if not Path(vae_path).exists() and Path(nested_dir).is_dir():
+        vae_path = f"{nested_dir}/Wan2.2_VAE.pth"
+    tokenizer_dir = f"{wan22_root}/google/umt5-xxl"
+    if not Path(tokenizer_dir).exists() and Path(nested_dir).is_dir():
+        tokenizer_dir = f"{nested_dir}/google/umt5-xxl"
+    return wan22_dit_dir, t5_path, vae_path, tokenizer_dir
+
+
+def resolve_wan22_dit_path(wan22_dit_dir: str):
+    shard_pattern = os.path.join(wan22_dit_dir, "diffusion_pytorch_model*.safetensors")
+    shards = sorted(glob.glob(shard_pattern))
+    if shards:
+        return shards
+    return wan22_dit_dir
+
+
+def load_wan22_pipeline(device="cuda", model_base_path=BASE_MODEL_PATH, lora_checkpoint=None):
     """Load WAN2.2-TI2V-5B model pipeline (using local checkpoints)."""
     print("Loading Wan2.2-TI2V-5B model from local checkpoints...")
-    print("Using local checkpoint files from:", BASE_MODEL_PATH)
+    print("Using local checkpoint files from:", model_base_path)
+
+    wan22_dit_dir, t5_path, vae_path, tokenizer_dir = resolve_wan22_paths(model_base_path)
+    dit_path = resolve_wan22_dit_path(wan22_dit_dir)
 
     # Use Wan2.2-TI2V-5B model (Text+Image-to-Video model that supports input_image)
     pipe = WanVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
         device=device,
         model_configs=[
-            ModelConfig(model_id="Wan-AI/Wan2.2-TI2V-5B",
-                       origin_file_pattern="models_t5_umt5-xxl-enc-bf16.pth",
-                       offload_device="cpu",
-                       local_model_path=BASE_MODEL_PATH),
-            ModelConfig(model_id="Wan-AI/Wan2.2-TI2V-5B",
-                       origin_file_pattern="diffusion_pytorch_model*.safetensors",
-                       offload_device="cpu",
-                       local_model_path=BASE_MODEL_PATH),
-            ModelConfig(model_id="Wan-AI/Wan2.2-TI2V-5B",
-                       origin_file_pattern="Wan2.2_VAE.pth",
-                       offload_device="cpu",
-                       local_model_path=BASE_MODEL_PATH),
+            ModelConfig(path=dit_path, offload_device="cpu"),
+            ModelConfig(path=t5_path, offload_device="cpu"),
+            ModelConfig(path=vae_path, offload_device="cpu"),
         ],
-        tokenizer_config=ModelConfig(model_id="Wan-AI/Wan2.2-TI2V-5B",
-                                    origin_file_pattern="google/*",
-                                    local_model_path=BASE_MODEL_PATH),
+        tokenizer_config=ModelConfig(path=tokenizer_dir),
     )
+
+    if lora_checkpoint and Path(lora_checkpoint).exists():
+        print(f"Loading LoRA checkpoint: {lora_checkpoint}")
+        lora_state_dict = load_state_dict(lora_checkpoint)
+        lora_loader = GeneralLoRALoader(device=device, torch_dtype=torch.bfloat16)
+        lora_loader.load(pipe.dit, lora_state_dict, alpha=1.0)
 
     pipe.enable_vram_management()
     return pipe
@@ -212,6 +238,10 @@ def main():
                        help="Output directory for generated videos")
     parser.add_argument("--model_name", type=str, default="wan22_ti2v_5b",
                        help="Model name for output directory (creates .model_name folder)")
+    parser.add_argument("--model_base_path", type=str, default=BASE_MODEL_PATH,
+                       help="Base path for WAN2.2 checkpoints")
+    parser.add_argument("--lora_checkpoint", type=str, default=None,
+                       help="Path to Stage 2 LoRA checkpoint (lora_weights.pth)")
     parser.add_argument("--max_samples", type=int, default=None,
                        help="Maximum number of samples to process (None for all)")
     parser.add_argument("--height", type=int, default=480,
@@ -302,7 +332,11 @@ def main():
         return
 
     # Load model
-    pipe = load_wan22_pipeline(device=args.device)
+    pipe = load_wan22_pipeline(
+        device=args.device,
+        model_base_path=args.model_base_path,
+        lora_checkpoint=args.lora_checkpoint,
+    )
 
     # Process samples
     print(f"\nStarting inference on {len(data)} samples...")
