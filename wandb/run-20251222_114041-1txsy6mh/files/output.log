@@ -1,0 +1,96 @@
+Loading models from: ['/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00001-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00002-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00003-of-00003-bf16.safetensors']
+    model_name: wan_video_dit model_class: WanModel
+        This model is initialized with extra kwargs: {'has_image_input': False, 'patch_size': [1, 2, 2], 'in_dim': 48, 'dim': 3072, 'ffn_dim': 14336, 'freq_dim': 256, 'text_dim': 4096, 'out_dim': 48, 'num_heads': 24, 'num_layers': 30, 'eps': 1e-06, 'seperated_timestep': True, 'require_clip_embedding': False, 'require_vae_embedding': False, 'fuse_vae_embedding_in_latents': True}
+    The following models are loaded: ['wan_video_dit'].
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth
+    model_name: wan_video_text_encoder model_class: WanTextEncoder
+    The following models are loaded: ['wan_video_text_encoder'].
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth
+    model_name: wan_video_vae model_class: WanVideoVAE38
+    The following models are loaded: ['wan_video_vae'].
+Using wan_video_text_encoder from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth.
+Using wan_video_dit from ['/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00001-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00002-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00003-of-00003-bf16.safetensors'].
+Using wan_video_vae from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth.
+No wan_video_image_encoder models available.
+No wan_video_motion_controller models available.
+No wan_video_vace models available.
+No wans2v_audio_encoder models available.
+Motion head initialized with 4 channels
+Spatio-temporal depth head initialized (simple)
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py:1355: UserWarning: Casting complex values to real discards the imaginary part (Triggered internally at /pytorch/aten/src/ATen/native/Copy.cpp:307.)
+  return t.to(
+============================================================
+TRAINING MODE: Heads Only (Stage 1)
+============================================================
+✗ Pipeline backbone: FROZEN
+✓ Motion head: TRAINABLE
+✓ Depth head: TRAINABLE
+============================================================
+[INFO] Optimizer params: 36 tensors (requires_grad=True)
+Epoch 1/10:   0%|▌                                                                                                                                                                                                             | 7/2625 [00:16<1:33:47,  2.15s/it, loss=5.8459, noise=0.1976, motion=0.3567, depth=5.3823, warp=1.0701, rgb_warp=0.0000]/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+grad.sizes() = [3072, 3072, 1, 1, 1], strides() = [3072, 1, 3072, 3072, 3072]
+bucket_view.sizes() = [3072, 3072, 1, 1, 1], strides() = [3072, 1, 1, 1, 1] (Triggered internally at /pytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+  return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+Epoch 1/10: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2625/2625 [1:32:19<00:00,  2.11s/it, loss=0.0155, noise=0.3126, motion=0.0104, depth=0.0050, warp=0.0014, rgb_warp=0.0000]
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-1000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-1500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-2000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-2500
+Epoch 2/10: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2625/2625 [1:31:56<00:00,  2.10s/it, loss=0.0237, noise=0.0865, motion=0.0169, depth=0.0066, warp=0.0019, rgb_warp=0.0000]
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-3000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-3500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-4000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-4500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-5000
+Epoch 3/10: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2625/2625 [1:32:10<00:00,  2.11s/it, loss=0.0120, noise=0.0851, motion=0.0086, depth=0.0033, warp=0.0006, rgb_warp=0.0000]
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-5500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-6000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-6500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-7000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-7500
+Epoch 4/10: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2625/2625 [1:32:03<00:00,  2.10s/it, loss=0.0083, noise=0.0913, motion=0.0064, depth=0.0019, warp=0.0006, rgb_warp=0.0000]
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-8000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-8500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-9000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-9500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-10000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-10500
+Epoch 5/10: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2625/2625 [1:31:57<00:00,  2.10s/it, loss=0.0085, noise=0.2500, motion=0.0077, depth=0.0009, warp=0.0003, rgb_warp=0.0000]
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-11000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-11500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-12000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-12500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-13000
+Epoch 6/10: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2625/2625 [1:32:13<00:00,  2.11s/it, loss=0.0151, noise=0.0834, motion=0.0128, depth=0.0021, warp=0.0008, rgb_warp=0.0000]
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-13500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-14000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-14500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-15000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-15500
+Epoch 7/10: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2625/2625 [1:31:52<00:00,  2.10s/it, loss=0.2761, noise=0.0859, motion=0.2736, depth=0.0024, warp=0.0009, rgb_warp=0.0000]
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-16000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-16500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-17000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-17500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-18000
+Epoch 8/10: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2625/2625 [1:31:54<00:00,  2.10s/it, loss=0.0033, noise=0.0729, motion=0.0021, depth=0.0011, warp=0.0002, rgb_warp=0.0000]
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-18500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-19000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-19500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-20000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-20500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-21000
+Epoch 9/10: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2625/2625 [1:32:02<00:00,  2.10s/it, loss=0.0196, noise=0.0804, motion=0.0182, depth=0.0013, warp=0.0003, rgb_warp=0.0000]
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-21500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-22000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-22500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-23000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-23500
+Epoch 10/10: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2625/2625 [1:32:12<00:00,  2.11s/it, loss=0.2425, noise=0.0832, motion=0.2409, depth=0.0015, warp=0.0006, rgb_warp=0.0000]
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-24000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-24500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-25000
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-25500
+Checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/checkpoint-26000
+Final checkpoint saved to /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/final

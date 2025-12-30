@@ -1,0 +1,36 @@
+Loading models from: ['/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00001-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00002-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00003-of-00003-bf16.safetensors']
+    model_name: wan_video_dit model_class: WanModel
+        This model is initialized with extra kwargs: {'has_image_input': False, 'patch_size': [1, 2, 2], 'in_dim': 48, 'dim': 3072, 'ffn_dim': 14336, 'freq_dim': 256, 'text_dim': 4096, 'out_dim': 48, 'num_heads': 24, 'num_layers': 30, 'eps': 1e-06, 'seperated_timestep': True, 'require_clip_embedding': False, 'require_vae_embedding': False, 'fuse_vae_embedding_in_latents': True}
+    The following models are loaded: ['wan_video_dit'].
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth
+    model_name: wan_video_text_encoder model_class: WanTextEncoder
+    The following models are loaded: ['wan_video_text_encoder'].
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth
+    model_name: wan_video_vae model_class: WanVideoVAE38
+    The following models are loaded: ['wan_video_vae'].
+Using wan_video_text_encoder from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth.
+Using wan_video_dit from ['/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00001-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00002-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00003-of-00003-bf16.safetensors'].
+Using wan_video_vae from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth.
+No wan_video_image_encoder models available.
+No wan_video_motion_controller models available.
+No wan_video_vace models available.
+No wans2v_audio_encoder models available.
+Loading motion head checkpoint from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/final/motion_head.pth
+✓ Motion head checkpoint loaded (3 tensors)
+Motion head initialized with 4 channels
+Spatio-temporal depth head initialized (simple)
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py:1355: UserWarning: Casting complex values to real discards the imaginary part (Triggered internally at /pytorch/aten/src/ATen/native/Copy.cpp:307.)
+  return t.to(
+Loading depth head checkpoint from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_simple/final/depth_head.pth
+✓ Depth head checkpoint loaded (35 tensors)
+============================================================
+TRAINING MODE: LoRA + Heads (Stage 2)
+============================================================
+✓ Motion head: TRAINABLE
+✓ Depth head: TRAINABLE
+[INFO] Trainable params: 636 tensors
+[INFO] DiT trainable params are LoRA-only
+✓ DiT backbone: LoRA (rank=128)
+============================================================
+[INFO] Optimizer params: 636 tensors (requires_grad=True)
+Epoch 1/10:   1%|██▊                                                                                                                                                                                                              | 7/525 [00:27<31:44,  3.68s/it, loss=0.1459, noise=0.0792, motion=0.0183, depth=0.0010, warp=0.0002, rgb_warp=0.0030]

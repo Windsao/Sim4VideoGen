@@ -26,8 +26,6 @@ MODEL_BASE_PATH="/nyx-storage1/hanliu/world_model_ckpt/Wan-AI"
 DATASET_BASE_PATH="/nyx-storage1/hanliu/Sim_Physics/TestOutput"
 DATASET_METADATA_PATH="/home/mzh1800/DiffSynth-Studio/data/sim_physics_metadata.csv"
 
-# Output path (will save checkpoints locally)
-OUTPUT_PATH="${MODEL_BASE_PATH}/wan22_ti2v_stage1"
 
 # ============================================
 # Video Configuration
@@ -74,13 +72,43 @@ SAVE_STEPS=500
 
 MOTION_LOSS_WEIGHT=1.0
 DEPTH_LOSS_WEIGHT=1.0
+USE_WARP_LOSS=true
+WARP_LOSS_WEIGHT=0.1
+WARP_LOSS_TYPE="mse"
+
+# Optional: Use spatio-temporal depth head (keep in sync with Stage 2)
+USE_SPATIOTEMPORAL_DEPTH=true
+SPATIOTEMPORAL_DEPTH_TYPE="simple"  # "simple" or "full"
+
+# Output path (will save checkpoints locally)
+if [ "$USE_SPATIOTEMPORAL_DEPTH" = true ]; then
+  if [ "$SPATIOTEMPORAL_DEPTH_TYPE" = "full" ]; then
+    OUTPUT_PATH="${MODEL_BASE_PATH}/wan22_ti2v_stage1_spatio_depth_full"
+  else
+    OUTPUT_PATH="${MODEL_BASE_PATH}/wan22_ti2v_stage1_spatio_depth_simple"
+  fi
+else
+  OUTPUT_PATH="${MODEL_BASE_PATH}/wan22_ti2v_stage1"
+fi
+
 
 # ============================================
 # Wandb Configuration (Optional)
 # ============================================
 
 USE_WANDB=true
-WANDB_PROJECT="wan22-ti2v-stage1-heads"
+if [ "$USE_SPATIOTEMPORAL_DEPTH" = true ]; then
+  if [ "$SPATIOTEMPORAL_DEPTH_TYPE" = "full" ]; then
+    WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-full"
+    WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-full"
+  else
+    WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-simple"
+    WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-simple"
+  fi
+else
+  WANDB_PROJECT="wan22-ti2v-stage1-heads"
+  WANDB_NAME="wan22-ti2v-stage1-heads"
+fi
 
 # ============================================
 # Print Configuration
@@ -108,6 +136,7 @@ echo ""
 echo "Loss weights:"
 echo "  - Motion loss: ${MOTION_LOSS_WEIGHT}"
 echo "  - Depth loss: ${DEPTH_LOSS_WEIGHT}"
+echo "  - Warp loss: ${USE_WARP_LOSS} (weight ${WARP_LOSS_WEIGHT}, type ${WARP_LOSS_TYPE})"
 echo ""
 
 ###############################################################################
@@ -118,7 +147,7 @@ accelerate launch --mixed_precision bf16 --num_processes 4 \
   train_wan22_ti2v_motion_depth.py \
   --dataset_base_path "$DATASET_BASE_PATH" \
   --dataset_metadata_path "$DATASET_METADATA_PATH" \
-  --dataset_repeat 100 \
+  --dataset_repeat 500 \
   --height $HEIGHT \
   --width $WIDTH \
   --num_frames $NUM_FRAMES \
@@ -134,7 +163,9 @@ accelerate launch --mixed_precision bf16 --num_processes 4 \
   --batch_size $BATCH_SIZE \
   --gradient_accumulation_steps $GRADIENT_ACCUMULATION_STEPS \
   --save_steps $SAVE_STEPS \
-  $([ "$USE_WANDB" = true ] && echo "--use_wandb --wandb_project $WANDB_PROJECT" || echo "")
+  $([ "$USE_WARP_LOSS" = true ] && echo "--use_warp_loss --warp_loss_weight $WARP_LOSS_WEIGHT --warp_loss_type $WARP_LOSS_TYPE" || echo "") \
+  $([ "$USE_SPATIOTEMPORAL_DEPTH" = true ] && echo "--use_spatiotemporal_depth --spatiotemporal_depth_type $SPATIOTEMPORAL_DEPTH_TYPE" || echo "") \
+  $([ "$USE_WANDB" = true ] && echo "--use_wandb --wandb_project $WANDB_PROJECT --wandb_name $WANDB_NAME" || echo "")
 
 echo ""
 echo "=========================================================================="

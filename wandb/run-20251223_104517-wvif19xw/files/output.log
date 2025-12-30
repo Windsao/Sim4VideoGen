@@ -1,0 +1,166 @@
+Loading models from: ['/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00001-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00002-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00003-of-00003-bf16.safetensors']
+    model_name: wan_video_dit model_class: WanModel
+        This model is initialized with extra kwargs: {'has_image_input': False, 'patch_size': [1, 2, 2], 'in_dim': 48, 'dim': 3072, 'ffn_dim': 14336, 'freq_dim': 256, 'text_dim': 4096, 'out_dim': 48, 'num_heads': 24, 'num_layers': 30, 'eps': 1e-06, 'seperated_timestep': True, 'require_clip_embedding': False, 'require_vae_embedding': False, 'fuse_vae_embedding_in_latents': True}
+    The following models are loaded: ['wan_video_dit'].
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth
+    model_name: wan_video_text_encoder model_class: WanTextEncoder
+    The following models are loaded: ['wan_video_text_encoder'].
+Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth
+    model_name: wan_video_vae model_class: WanVideoVAE38
+    The following models are loaded: ['wan_video_vae'].
+Using wan_video_text_encoder from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth.
+Using wan_video_dit from ['/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00001-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00002-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00003-of-00003-bf16.safetensors'].
+Using wan_video_vae from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth.
+No wan_video_image_encoder models available.
+No wan_video_motion_controller models available.
+No wan_video_vace models available.
+No wans2v_audio_encoder models available.
+Loading motion head checkpoint from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_full/final/motion_head.pth
+✓ Motion head checkpoint loaded (3 tensors)
+Motion head initialized with 4 channels
+Spatio-temporal depth head initialized (full)
+/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py:1355: UserWarning: Casting complex values to real discards the imaginary part (Triggered internally at /pytorch/aten/src/ATen/native/Copy.cpp:307.)
+  return t.to(
+Loading depth head checkpoint from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage1_spatio_depth_full/final/depth_head.pth
+✓ Depth head checkpoint loaded (177 tensors)
+============================================================
+TRAINING MODE: LoRA + Heads (Stage 2)
+============================================================
+✓ Motion head: TRAINABLE
+✓ Depth head: TRAINABLE
+[INFO] Trainable params: 997 tensors
+[WARN] Non-LoRA DiT params are trainable (showing up to 10): ['pipe.dit.patch_embedding.weight', 'pipe.dit.patch_embedding.bias', 'pipe.dit.text_embedding.0.weight', 'pipe.dit.text_embedding.0.bias', 'pipe.dit.text_embedding.2.weight', 'pipe.dit.text_embedding.2.bias', 'pipe.dit.time_embedding.0.weight', 'pipe.dit.time_embedding.0.bias', 'pipe.dit.time_embedding.2.weight', 'pipe.dit.time_embedding.2.bias']
+✓ DiT backbone: LoRA (rank=32)
+============================================================
+[INFO] Trainable params: 997 tensors
+[INFO] Example trainable params: ['pipe.dit.patch_embedding.weight', 'pipe.dit.patch_embedding.bias', 'pipe.dit.text_embedding.0.weight', 'pipe.dit.text_embedding.0.bias', 'pipe.dit.text_embedding.2.weight']
+[INFO] Optimizer params: 997 tensors (requires_grad=True)
+Epoch 1/10:   0%|                                                                                                                                                                                                              | 1/2625 [00:10<7:38:26, 10.48s/it, loss=0.1510, noise=0.0780, motion=0.0088, depth=0.0036, warp=0.0007, rgb_warp=0.0050]
+Traceback (most recent call last):
+  File "/home/mzh1800/DiffSynth-Studio/train_wan22_stage2_finetune.py", line 403, in <module>
+    main()
+  File "/home/mzh1800/DiffSynth-Studio/train_wan22_stage2_finetune.py", line 309, in main
+    loss, loss_dict = model(batch)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/parallel/distributed.py", line 1648, in forward
+    else self._run_ddp_forward(*inputs, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/parallel/distributed.py", line 1474, in _run_ddp_forward
+    return self.module(*inputs, **kwargs)  # type: ignore[index]
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/accelerate/utils/operations.py", line 818, in forward
+    return model_forward(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/accelerate/utils/operations.py", line 806, in __call__
+    return convert_to_fp32(self.model_forward(*args, **kwargs))
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/amp/autocast_mode.py", line 44, in decorate_autocast
+    return func(*args, **kwargs)
+  File "/home/mzh1800/DiffSynth-Studio/train_wan22_ti2v_motion_depth.py", line 653, in forward
+    inputs = self.forward_preprocess(data)
+  File "/home/mzh1800/DiffSynth-Studio/train_wan22_ti2v_motion_depth.py", line 633, in forward_preprocess
+    inputs_shared, inputs_posi, inputs_nega = self.pipe.unit_runner(
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/utils/__init__.py", line 273, in __call__
+    processor_outputs = unit.process(pipe, **processor_inputs)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/pipelines/wan_video_new.py", line 563, in process
+    input_latents = pipe.vae.encode(input_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride).to(dtype=pipe.torch_dtype, device=pipe.device)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 1228, in encode
+    hidden_state = self.single_encode(video, device)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 1208, in single_encode
+    x = self.model.encode(video, self.scale)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 1310, in encode
+    out_ = self.encoder(x[:, :, 1 + 4 * (i - 1):1 + 4 * i, :, :],
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 701, in forward
+    x = layer(x, feat_cache, feat_idx)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 472, in forward
+    x = module(x, feat_cache, feat_idx)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 296, in forward
+    x = layer(x, feat_cache[idx])
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 50, in forward
+    x = F.pad(x, padding)
+  File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/functional.py", line 5290, in pad
+    return torch._C._nn.pad(input, pad, mode, value)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 216.00 MiB. GPU 0 has a total capacity of 44.42 GiB of which 151.12 MiB is free. Including non-PyTorch memory, this process has 44.27 GiB memory in use. Of the allocated memory 41.23 GiB is allocated by PyTorch, and 2.58 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/train_wan22_stage2_finetune.py", line 403, in <module>
+[rank0]:     main()
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/train_wan22_stage2_finetune.py", line 309, in main
+[rank0]:     loss, loss_dict = model(batch)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/parallel/distributed.py", line 1648, in forward
+[rank0]:     else self._run_ddp_forward(*inputs, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/parallel/distributed.py", line 1474, in _run_ddp_forward
+[rank0]:     return self.module(*inputs, **kwargs)  # type: ignore[index]
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/accelerate/utils/operations.py", line 818, in forward
+[rank0]:     return model_forward(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/accelerate/utils/operations.py", line 806, in __call__
+[rank0]:     return convert_to_fp32(self.model_forward(*args, **kwargs))
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/amp/autocast_mode.py", line 44, in decorate_autocast
+[rank0]:     return func(*args, **kwargs)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/train_wan22_ti2v_motion_depth.py", line 653, in forward
+[rank0]:     inputs = self.forward_preprocess(data)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/train_wan22_ti2v_motion_depth.py", line 633, in forward_preprocess
+[rank0]:     inputs_shared, inputs_posi, inputs_nega = self.pipe.unit_runner(
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/diffsynth/utils/__init__.py", line 273, in __call__
+[rank0]:     processor_outputs = unit.process(pipe, **processor_inputs)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/diffsynth/pipelines/wan_video_new.py", line 563, in process
+[rank0]:     input_latents = pipe.vae.encode(input_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride).to(dtype=pipe.torch_dtype, device=pipe.device)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 1228, in encode
+[rank0]:     hidden_state = self.single_encode(video, device)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 1208, in single_encode
+[rank0]:     x = self.model.encode(video, self.scale)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 1310, in encode
+[rank0]:     out_ = self.encoder(x[:, :, 1 + 4 * (i - 1):1 + 4 * i, :, :],
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 701, in forward
+[rank0]:     x = layer(x, feat_cache, feat_idx)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 472, in forward
+[rank0]:     x = module(x, feat_cache, feat_idx)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 296, in forward
+[rank0]:     x = layer(x, feat_cache[idx])
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:   File "/home/mzh1800/DiffSynth-Studio/diffsynth/models/wan_video_vae.py", line 50, in forward
+[rank0]:     x = F.pad(x, padding)
+[rank0]:   File "/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/nn/functional.py", line 5290, in pad
+[rank0]:     return torch._C._nn.pad(input, pad, mode, value)
+[rank0]: torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 216.00 MiB. GPU 0 has a total capacity of 44.42 GiB of which 151.12 MiB is free. Including non-PyTorch memory, this process has 44.27 GiB memory in use. Of the allocated memory 41.23 GiB is allocated by PyTorch, and 2.58 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

@@ -88,6 +88,7 @@ DEPTH_LOSS_WEIGHT=0.5
 # Wandb configuration (optional)
 USE_WANDB=true
 WANDB_PROJECT="wan22-ti2v-stage2-lora-depth-cond"
+WANDB_NAME="wan22-ti2v-stage2-lora-depth-cond"
 
 ###############################################################################
 # Run Stage 2 Training
@@ -118,7 +119,7 @@ accelerate launch --mixed_precision bf16 --num_processes 4 \
   --batch_size $BATCH_SIZE \
   --gradient_accumulation_steps $GRADIENT_ACCUMULATION_STEPS \
   --save_steps $SAVE_STEPS \
-  $([ "$USE_WANDB" = true ] && echo "--use_wandb --wandb_project $WANDB_PROJECT" || echo "")
+  $([ "$USE_WANDB" = true ] && echo "--use_wandb --wandb_project $WANDB_PROJECT --wandb_name $WANDB_NAME" || echo "")
 
 echo ""
 echo "=========================================================================="

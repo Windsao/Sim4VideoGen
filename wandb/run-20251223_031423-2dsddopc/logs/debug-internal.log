@@ -1,0 +1,6 @@
+{"time":"2025-12-23T03:14:23.861437552-06:00","level":"INFO","msg":"stream: starting","core version":"0.23.1"}
+{"time":"2025-12-23T03:14:24.026958628-06:00","level":"INFO","msg":"stream: created new stream","id":"2dsddopc"}
+{"time":"2025-12-23T03:14:24.027028848-06:00","level":"INFO","msg":"handler: started","stream_id":"2dsddopc"}
+{"time":"2025-12-23T03:14:24.027675857-06:00","level":"INFO","msg":"stream: started","id":"2dsddopc"}
+{"time":"2025-12-23T03:14:24.027683396-06:00","level":"INFO","msg":"writer: started","stream_id":"2dsddopc"}
+{"time":"2025-12-23T03:14:24.027687104-06:00","level":"INFO","msg":"sender: started","stream_id":"2dsddopc"}

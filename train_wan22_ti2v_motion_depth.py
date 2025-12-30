@@ -27,13 +27,15 @@ from diffsynth.trainers.unified_dataset import (
 from diffsynth.trainers.image_sequence_loader import LoadImageSequenceWithMotion
 from diffsynth.models.wan_video_dit_motion import (
     MotionVectorHead, DepthHead,
-    compute_motion_loss, compute_depth_loss
+    compute_motion_loss, compute_depth_loss, compute_warp_loss
 )
+from diffsynth.models.rgb_warp_loss import compute_rgb_warp_loss
 from diffsynth.models.spatiotemporal_depth_head import (
     SpatioTemporalDepthHead, SpatioTemporalDepthHeadSimple
 )
 
 from accelerate import Accelerator
+from accelerate.utils import DistributedDataParallelKwargs
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -623,6 +625,8 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
             inputs_shared["target_motion_vectors"] = motion_vectors
         if depth_maps is not None:
             inputs_shared["target_depth_maps"] = depth_maps
+        if self.use_rgb_warp_loss and video_frames is not None:
+            inputs_shared["target_rgb_frames"] = video_frames
 
         # Pipeline units will automatically process input parameters
         for unit in self.pipe.units:
@@ -651,6 +655,9 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
         # Extract targets
         target_motion = inputs.pop("target_motion_vectors", None)
         target_depth = inputs.pop("target_depth_maps", None)
+        target_rgb_frames = inputs.pop("target_rgb_frames", None)
+        target_motion_raw = target_motion
+        target_depth_raw = target_depth
 
         # Standard training loss computation (mirrors train_wan_with_motion.py)
         max_timestep_boundary = int(inputs.get("max_timestep_boundary", 1) * self.pipe.scheduler.num_train_timesteps)
@@ -692,21 +699,28 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
             motion_pred = self.compute_motion_prediction(self._dit_features, t_embed, grid_size)
 
             # Align shapes
-            target_motion = target_motion.to(device=motion_pred.device, dtype=motion_pred.dtype)
-            if target_motion.dim() == 4:
-                target_motion = target_motion.unsqueeze(0)
-            if target_motion.shape[2] == motion_pred.shape[2] - 1:
-                pad = torch.zeros_like(target_motion[:, :, :1])
-                target_motion = torch.cat([target_motion, pad], dim=2)
-            if target_motion.shape[2:] != motion_pred.shape[2:]:
-                target_motion = F.interpolate(target_motion, size=motion_pred.shape[2:], mode="trilinear", align_corners=False)
+            target_motion_for_loss = target_motion.to(device=motion_pred.device, dtype=motion_pred.dtype)
+            if target_motion_for_loss.dim() == 4:
+                target_motion_for_loss = target_motion_for_loss.unsqueeze(0)
+            if target_motion_for_loss.shape[2] == motion_pred.shape[2] - 1:
+                pad = torch.zeros_like(target_motion_for_loss[:, :, :1])
+                target_motion_for_loss = torch.cat([target_motion_for_loss, pad], dim=2)
+            if target_motion_for_loss.shape[2:] != motion_pred.shape[2:]:
+                target_motion_for_loss = F.interpolate(
+                    target_motion_for_loss,
+                    size=motion_pred.shape[2:],
+                    mode="trilinear",
+                    align_corners=False,
+                )
 
             motion_loss = compute_motion_loss(
-                motion_pred, target_motion, loss_type=self.motion_loss_type
+                motion_pred, target_motion_for_loss, loss_type=self.motion_loss_type
             )
 
             loss_dict["motion_loss"] = motion_loss.detach().item()
             total_loss = motion_loss * self.motion_loss_weight if total_loss is None else total_loss + self.motion_loss_weight * motion_loss
+
+        depth_pred = None
 
         # Compute depth loss
         if self.enable_depth and self._dit_features is not None and target_depth is not None:
@@ -720,18 +734,128 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
             depth_pred = self.compute_depth_prediction(self._dit_features, t_embed, grid_size)
 
             # Align shapes
-            target_depth = target_depth.to(device=depth_pred.device, dtype=depth_pred.dtype)
-            if target_depth.dim() == 4:
-                target_depth = target_depth.unsqueeze(0)
-            if target_depth.shape[2:] != depth_pred.shape[2:]:
-                target_depth = F.interpolate(target_depth, size=depth_pred.shape[2:], mode="trilinear", align_corners=False)
+            target_depth_for_loss = target_depth.to(device=depth_pred.device, dtype=depth_pred.dtype)
+            if target_depth_for_loss.dim() == 4:
+                target_depth_for_loss = target_depth_for_loss.unsqueeze(0)
+            if target_depth_for_loss.shape[2:] != depth_pred.shape[2:]:
+                target_depth_for_loss = F.interpolate(
+                    target_depth_for_loss,
+                    size=depth_pred.shape[2:],
+                    mode="trilinear",
+                    align_corners=False,
+                )
 
             depth_loss = compute_depth_loss(
-                depth_pred, target_depth, loss_type=self.depth_loss_type
+                depth_pred, target_depth_for_loss, loss_type=self.depth_loss_type
             )
 
             loss_dict["depth_loss"] = depth_loss.detach().item()
             total_loss = depth_loss * self.depth_loss_weight if total_loss is None else total_loss + self.depth_loss_weight * depth_loss
+
+        # Compute warp loss if enabled (temporal consistency via flow warping)
+        warp_loss = None
+        if self.use_warp_loss and target_depth_raw is not None and target_motion_raw is not None and depth_pred is not None:
+            target_motion_for_warp = target_motion_raw.to(device=depth_pred.device, dtype=depth_pred.dtype)
+            if target_motion_for_warp.dim() == 4:
+                target_motion_for_warp = target_motion_for_warp.unsqueeze(0)
+
+            pred_f, pred_h, pred_w = depth_pred.shape[2], depth_pred.shape[3], depth_pred.shape[4]
+            flow_f, flow_h, flow_w = target_motion_for_warp.shape[2], target_motion_for_warp.shape[3], target_motion_for_warp.shape[4]
+
+            if (flow_h, flow_w) != (pred_h, pred_w):
+                B_flow, C_flow = target_motion_for_warp.shape[:2]
+                target_motion_for_warp = target_motion_for_warp.permute(0, 2, 1, 3, 4)
+                target_motion_for_warp = target_motion_for_warp.reshape(B_flow * flow_f, C_flow, flow_h, flow_w)
+                target_motion_for_warp = F.interpolate(
+                    target_motion_for_warp,
+                    size=(pred_h, pred_w),
+                    mode="bilinear",
+                    align_corners=False,
+                )
+                target_motion_for_warp[:, 0] *= pred_w / flow_w
+                target_motion_for_warp[:, 1] *= pred_h / flow_h
+                target_motion_for_warp = target_motion_for_warp.reshape(B_flow, flow_f, C_flow, pred_h, pred_w)
+                target_motion_for_warp = target_motion_for_warp.permute(0, 2, 1, 3, 4)
+
+            target_depth_for_warp = target_depth_raw.to(device=depth_pred.device, dtype=depth_pred.dtype)
+            if target_depth_for_warp.dim() == 4:
+                target_depth_for_warp = target_depth_for_warp.unsqueeze(0)
+
+            if (target_depth_for_warp.shape[2], target_depth_for_warp.shape[3], target_depth_for_warp.shape[4]) != (pred_f, pred_h, pred_w):
+                target_depth_for_warp = F.interpolate(
+                    target_depth_for_warp,
+                    size=(pred_f, pred_h, pred_w),
+                    mode="trilinear",
+                    align_corners=False,
+                )
+
+            warp_depth_mean = target_depth_for_warp.abs().mean().clamp(min=1e-6)
+            depth_pred_norm_for_warp = depth_pred / warp_depth_mean
+            target_depth_norm_for_warp = target_depth_for_warp / warp_depth_mean
+
+            warp_loss = compute_warp_loss(
+                depth_pred_norm_for_warp,
+                target_depth_norm_for_warp,
+                target_motion_for_warp,
+                loss_type=self.warp_loss_type,
+            )
+
+            if torch.isnan(warp_loss) or torch.isinf(warp_loss):
+                print("[WARNING] NaN/Inf warp_loss detected, skipping...")
+                warp_loss = torch.tensor(0.0, device=depth_pred.device, dtype=depth_pred.dtype, requires_grad=True)
+
+            loss_dict["warp_loss"] = warp_loss.detach().item()
+            loss_dict["warp_loss_weighted"] = (self.warp_loss_weight * warp_loss).detach().item()
+
+            weighted_warp_loss = self.warp_loss_weight * warp_loss
+            total_loss = weighted_warp_loss if total_loss is None else total_loss + weighted_warp_loss
+
+        # Compute RGB warp loss if enabled (photometric temporal consistency)
+        rgb_warp_loss = None
+        if self.use_rgb_warp_loss and target_rgb_frames is not None and target_motion_raw is not None:
+            import torchvision.transforms.functional as TF
+
+            rgb_tensors = []
+            for frame in target_rgb_frames:
+                rgb_tensor = TF.to_tensor(frame)
+                rgb_tensors.append(rgb_tensor)
+            target_rgb_tensor = torch.stack(rgb_tensors, dim=1).unsqueeze(0)
+            target_rgb_tensor = target_rgb_tensor.to(device=self.pipe.device, dtype=self.pipe.torch_dtype)
+
+            B_rgb, C_rgb, T_rgb, H_rgb, W_rgb = target_rgb_tensor.shape
+            target_motion_for_rgb = target_motion_raw.to(device=self.pipe.device, dtype=self.pipe.torch_dtype)
+            if target_motion_for_rgb.dim() == 4:
+                target_motion_for_rgb = target_motion_for_rgb.unsqueeze(0)
+
+            B_m, C_m, T_m, H_m, W_m = target_motion_for_rgb.shape
+            if H_m != H_rgb or W_m != W_rgb:
+                motion_reshaped = target_motion_for_rgb.permute(0, 2, 1, 3, 4).reshape(B_m * T_m, C_m, H_m, W_m)
+                motion_resized = F.interpolate(motion_reshaped, size=(H_rgb, W_rgb), mode="bilinear", align_corners=True)
+                target_motion_for_rgb = motion_resized.reshape(B_m, T_m, C_m, H_rgb, W_rgb).permute(0, 2, 1, 3, 4)
+
+                scale_h = H_rgb / H_m
+                scale_w = W_rgb / W_m
+                target_motion_for_rgb[:, 0] *= scale_w
+                target_motion_for_rgb[:, 1] *= scale_h
+
+            rgb_warp_loss = compute_rgb_warp_loss(
+                target_rgb_tensor,
+                target_rgb_tensor,
+                target_motion_for_rgb,
+                loss_type=self.rgb_warp_loss_type,
+                use_ssim=self.rgb_warp_use_ssim,
+                ssim_weight=self.rgb_warp_ssim_weight,
+            )
+
+            if torch.isnan(rgb_warp_loss) or torch.isinf(rgb_warp_loss):
+                print("[WARNING] NaN/Inf rgb_warp_loss detected, skipping...")
+                rgb_warp_loss = torch.tensor(0.0, device=self.pipe.device, dtype=self.pipe.torch_dtype, requires_grad=True)
+
+            loss_dict["rgb_warp_loss"] = rgb_warp_loss.detach().item()
+            loss_dict["rgb_warp_loss_weighted"] = (self.rgb_warp_loss_weight * rgb_warp_loss).detach().item()
+
+            weighted_rgb_warp_loss = self.rgb_warp_loss_weight * rgb_warp_loss
+            total_loss = weighted_rgb_warp_loss if total_loss is None else total_loss + weighted_rgb_warp_loss
 
         if total_loss is None:
             total_loss = torch.zeros((), device=self.pipe.device, dtype=self.pipe.torch_dtype, requires_grad=True)
@@ -877,6 +1001,14 @@ def main():
     parser.add_argument("--depth_loss_weight", type=float, default=0.1)
     parser.add_argument("--motion_loss_type", type=str, default="mse", choices=["mse", "l1", "smooth_l1"])
     parser.add_argument("--depth_loss_type", type=str, default="mse", choices=["mse", "l1", "smooth_l1"])
+    parser.add_argument("--use_warp_loss", action="store_true")
+    parser.add_argument("--warp_loss_weight", type=float, default=0.1)
+    parser.add_argument("--warp_loss_type", type=str, default="mse", choices=["mse", "l1", "smooth_l1"])
+    parser.add_argument("--use_rgb_warp_loss", action="store_true")
+    parser.add_argument("--rgb_warp_loss_weight", type=float, default=0.1)
+    parser.add_argument("--rgb_warp_loss_type", type=str, default="l1", choices=["mse", "l1", "smooth_l1"])
+    parser.add_argument("--rgb_warp_use_ssim", action="store_true")
+    parser.add_argument("--rgb_warp_ssim_weight", type=float, default=0.85)
 
     # Training parameters
     parser.add_argument("--learning_rate", type=float, default=1e-5)
@@ -888,6 +1020,8 @@ def main():
     # Wandb
     parser.add_argument("--use_wandb", action="store_true")
     parser.add_argument("--wandb_project", type=str, default="wan22-ti2v-motion-depth")
+    parser.add_argument("--wandb_name", type=str, default=None,
+                        help="Optional run name for Weights & Biases.")
 
     # Spatio-temporal depth
     parser.add_argument("--use_spatiotemporal_depth", action="store_true")
@@ -901,16 +1035,18 @@ def main():
         print(f"[INFO] Resolved --model_paths: {summarize_model_paths(args.model_paths)}")
 
     # Initialize accelerator
+    ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision="bf16",
+        kwargs_handlers=[ddp_kwargs],
     )
 
     # Initialize wandb
     if args.use_wandb and accelerator.is_main_process:
         if not WANDB_AVAILABLE:
             raise RuntimeError("wandb is not installed, but --use_wandb was provided.")
-        wandb.init(project=args.wandb_project, config=vars(args))
+        wandb.init(project=args.wandb_project, name=args.wandb_name, config=vars(args))
 
     # Create dataset with motion and depth loading
     dataset = UnifiedDataset(
@@ -963,6 +1099,14 @@ def main():
         motion_loss_type=args.motion_loss_type,
         depth_loss_weight=args.depth_loss_weight,
         depth_loss_type=args.depth_loss_type,
+        use_warp_loss=args.use_warp_loss,
+        warp_loss_weight=args.warp_loss_weight,
+        warp_loss_type=args.warp_loss_type,
+        use_rgb_warp_loss=args.use_rgb_warp_loss,
+        rgb_warp_loss_weight=args.rgb_warp_loss_weight,
+        rgb_warp_loss_type=args.rgb_warp_loss_type,
+        rgb_warp_use_ssim=args.rgb_warp_use_ssim,
+        rgb_warp_ssim_weight=args.rgb_warp_ssim_weight,
         motion_head_checkpoint=args.motion_head_checkpoint,
         depth_head_checkpoint=args.depth_head_checkpoint,
         use_spatiotemporal_depth=args.use_spatiotemporal_depth,
@@ -1016,6 +1160,8 @@ def main():
                     "noise": f"{loss_dict['noise_loss']:.4f}",
                     "motion": f"{loss_dict.get('motion_loss', 0):.4f}",
                     "depth": f"{loss_dict.get('depth_loss', 0):.4f}",
+                    "warp": f"{loss_dict.get('warp_loss', 0):.4f}",
+                    "rgb_warp": f"{loss_dict.get('rgb_warp_loss', 0):.4f}",
                 })
 
                 if args.use_wandb:
@@ -1024,6 +1170,10 @@ def main():
                         "train/noise_loss": loss_dict["noise_loss"],
                         "train/motion_loss": loss_dict.get("motion_loss", 0),
                         "train/depth_loss": loss_dict.get("depth_loss", 0),
+                        "train/warp_loss": loss_dict.get("warp_loss", 0),
+                        "train/warp_loss_weighted": loss_dict.get("warp_loss_weighted", 0),
+                        "train/rgb_warp_loss": loss_dict.get("rgb_warp_loss", 0),
+                        "train/rgb_warp_loss_weighted": loss_dict.get("rgb_warp_loss_weighted", 0),
                         "global_step": global_step,
                     })
 
