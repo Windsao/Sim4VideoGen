@@ -1,6 +1,0 @@
-{"time":"2025-12-23T03:12:37.60297361-06:00","level":"INFO","msg":"stream: starting","core version":"0.23.1"}
-{"time":"2025-12-23T03:12:37.774729038-06:00","level":"INFO","msg":"stream: created new stream","id":"lapiccdn"}
-{"time":"2025-12-23T03:12:37.775091895-06:00","level":"INFO","msg":"handler: started","stream_id":"lapiccdn"}
-{"time":"2025-12-23T03:12:37.775810581-06:00","level":"INFO","msg":"stream: started","id":"lapiccdn"}
-{"time":"2025-12-23T03:12:37.775816779-06:00","level":"INFO","msg":"writer: started","stream_id":"lapiccdn"}
-{"time":"2025-12-23T03:12:37.775822255-06:00","level":"INFO","msg":"sender: started","stream_id":"lapiccdn"}
