@@ -1,345 +1,0 @@
-/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
-  import pynvml  # type: ignore[import]
-/nyx-storage1/hanliu/miniconda3/envs/diffsyn/lib/python3.10/site-packages/transformers/utils/hub.py:111: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
-  warnings.warn(
-============================================================
-Physics-IQ Wan2.2-TI2V-5B Inference Pipeline
-============================================================
-
-Configuration:
-  height: 480
-  width: 832
-  num_frames: 81
-  cfg_scale: 7.0
-  num_inference_steps: 50
-  fps: 16
-  seed: 42
-  quality: 5
-  tiled: True
-  resize_input: False
-  negative_prompt: blurry, low quality, distorted, static image, cartoon, animation
-
-Loading data from:
-  Images: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames
-  Descriptions: /nyx-storage1/hanliu/physics-IQ-benchmark/descriptions/descriptions.csv
-
-Found 198 valid samples with switch-frame images to process
-(Note: Only scenarios 0001-0198 have switch-frame images available)
-
-🔀 Shard 1/4: Processing samples 50 to 99 (50 samples)
-Loading Wan2.2-TI2V-5B model from local checkpoints...
-Using local checkpoint files from: /nyx-storage1/hanliu/world_model_ckpt
-Loading models from: ['/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00001-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00002-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00003-of-00003-bf16.safetensors']
-    model_name: wan_video_dit model_class: WanModel
-        This model is initialized with extra kwargs: {'has_image_input': False, 'patch_size': [1, 2, 2], 'in_dim': 48, 'dim': 3072, 'ffn_dim': 14336, 'freq_dim': 256, 'text_dim': 4096, 'out_dim': 48, 'num_heads': 24, 'num_layers': 30, 'eps': 1e-06, 'seperated_timestep': True, 'require_clip_embedding': False, 'require_vae_embedding': False, 'fuse_vae_embedding_in_latents': True}
-    The following models are loaded: ['wan_video_dit'].
-Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth
-    model_name: wan_video_text_encoder model_class: WanTextEncoder
-    The following models are loaded: ['wan_video_text_encoder'].
-Loading models from: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth
-    model_name: wan_video_vae model_class: WanVideoVAE38
-    The following models are loaded: ['wan_video_vae'].
-Using wan_video_text_encoder from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth.
-Using wan_video_dit from ['/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00001-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00002-of-00003-bf16.safetensors', '/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/diffusion_pytorch_model-00003-of-00003-bf16.safetensors'].
-Using wan_video_vae from /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth.
-No wan_video_image_encoder models available.
-No wan_video_motion_controller models available.
-No wan_video_vace models available.
-No wans2v_audio_encoder models available.
-Loading LoRA checkpoint: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage2_spatio_depth_full_long/checkpoint-1000/lora_weights.pth
-300 tensors are updated by LoRA.
-
-Starting inference on 50 samples...
-============================================================
-Processing samples:   0%|          | 0/50 [00:00<?, ?it/s]
-Processing 0051: 0051_perspective-right_take-1_trimmed-dominos-with...
-Prompt: Two rows of alternating black and white dominoes are set up on a wooden table with a gap between the...
-Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0051_switch-frames_anyFPS_perspective-right_trimmed-dominos-with-space.jpg
-
-VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][A
-VAE encoding: 100%|██████████| 1/1 [00:00<00:00,  4.09it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00,  4.08it/s]
-
-  0%|          | 0/50 [00:00<?, ?it/s][A
-  2%|▏         | 1/50 [00:09<07:35,  9.30s/it][A
-  4%|▍         | 2/50 [00:14<05:25,  6.79s/it][A
-  6%|▌         | 3/50 [00:19<04:50,  6.18s/it][A
-  8%|▊         | 4/50 [00:24<04:22,  5.71s/it][A
- 10%|█         | 5/50 [00:30<04:14,  5.67s/it][A
- 12%|█▏        | 6/50 [00:35<04:01,  5.48s/it][A
- 14%|█▍        | 7/50 [00:41<03:57,  5.51s/it][A
- 16%|█▌        | 8/50 [00:46<03:52,  5.53s/it][A
- 18%|█▊        | 9/50 [00:52<03:47,  5.55s/it][A
- 20%|██        | 10/50 [00:56<03:31,  5.30s/it][A
- 22%|██▏       | 11/50 [01:02<03:29,  5.38s/it][A
- 24%|██▍       | 12/50 [01:08<03:26,  5.45s/it][A
- 26%|██▌       | 13/50 [01:13<03:21,  5.45s/it][A
- 28%|██▊       | 14/50 [01:18<03:10,  5.29s/it][A
- 30%|███       | 15/50 [01:24<03:08,  5.38s/it][A
- 32%|███▏      | 16/50 [01:29<03:01,  5.33s/it][A
- 34%|███▍      | 17/50 [01:34<02:58,  5.40s/it][A
- 36%|███▌      | 18/50 [01:39<02:47,  5.24s/it][A
- 38%|███▊      | 19/50 [01:45<02:45,  5.34s/it][A
- 40%|████      | 20/50 [01:50<02:38,  5.27s/it][A
- 42%|████▏     | 21/50 [01:55<02:29,  5.15s/it][A
- 44%|████▍     | 22/50 [02:00<02:27,  5.28s/it][A
- 46%|████▌     | 23/50 [02:06<02:24,  5.36s/it][A
- 48%|████▊     | 24/50 [02:11<02:16,  5.26s/it][A
- 50%|█████     | 25/50 [02:16<02:10,  5.22s/it][A
- 52%|█████▏    | 26/50 [02:22<02:07,  5.29s/it][A
- 54%|█████▍    | 27/50 [02:27<02:03,  5.37s/it][A
- 56%|█████▌    | 28/50 [02:33<01:59,  5.44s/it][A
- 58%|█████▊    | 29/50 [02:38<01:56,  5.53s/it][A
- 60%|██████    | 30/50 [02:44<01:51,  5.57s/it][A
- 62%|██████▏   | 31/50 [02:50<01:45,  5.58s/it][A
- 64%|██████▍   | 32/50 [02:55<01:40,  5.57s/it][A
- 66%|██████▌   | 33/50 [03:01<01:33,  5.51s/it][A
- 68%|██████▊   | 34/50 [03:06<01:28,  5.53s/it][A
- 70%|███████   | 35/50 [03:12<01:23,  5.54s/it][A
- 72%|███████▏  | 36/50 [03:17<01:17,  5.54s/it][A
- 74%|███████▍  | 37/50 [03:23<01:12,  5.55s/it][A
- 76%|███████▌  | 38/50 [03:28<01:06,  5.56s/it][A
- 78%|███████▊  | 39/50 [03:34<01:01,  5.56s/it][A
- 80%|████████  | 40/50 [03:39<00:55,  5.50s/it][A
- 82%|████████▏ | 41/50 [03:45<00:49,  5.52s/it][A
- 84%|████████▍ | 42/50 [03:51<00:44,  5.54s/it][A
- 86%|████████▌ | 43/50 [03:56<00:38,  5.54s/it][A
- 88%|████████▊ | 44/50 [04:02<00:33,  5.55s/it][A
- 90%|█████████ | 45/50 [04:07<00:27,  5.56s/it][A
- 92%|█████████▏| 46/50 [04:12<00:21,  5.46s/it][A
- 94%|█████████▍| 47/50 [04:18<00:16,  5.46s/it][A
- 96%|█████████▌| 48/50 [04:23<00:10,  5.50s/it][A
- 98%|█████████▊| 49/50 [04:29<00:05,  5.51s/it][A
-100%|██████████| 50/50 [04:35<00:00,  5.54s/it][A100%|██████████| 50/50 [04:35<00:00,  5.50s/it]
-
-VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
-VAE decoding: 100%|██████████| 1/1 [00:17<00:00, 17.16s/it][AVAE decoding: 100%|██████████| 1/1 [00:17<00:00, 17.16s/it]
-
-Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
-To disable this warning, you can either:
-	- Avoid using `tokenizers` before the fork if possible
-	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
-
-Saving video:   1%|          | 1/81 [00:00<00:26,  3.03it/s][A
-Saving video:  91%|█████████▏| 74/81 [00:00<00:00, 216.72it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 173.99it/s]
-Processing samples:   2%|▏         | 1/50 [05:11<4:14:07, 311.17s/it]✓ Generated in 310.45s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0051_perspective-right_trimmed-dominos-with-space.mp4
-
-Processing 0052: 0052_perspective-left_take-1_trimmed-double-cradle...
-Prompt: A Newton's cradle device on the table and two of the metal balls are held up by a blue handled grabb...
-Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0052_switch-frames_anyFPS_perspective-left_trimmed-double-cradle.jpg
-
-VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][A
-VAE encoding: 100%|██████████| 1/1 [00:00<00:00,  8.19it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00,  8.18it/s]
-
-  0%|          | 0/50 [00:00<?, ?it/s][A
-  2%|▏         | 1/50 [00:07<05:52,  7.18s/it][A
-  4%|▍         | 2/50 [00:12<05:00,  6.26s/it][A
-  6%|▌         | 3/50 [00:18<04:40,  5.97s/it][A
-  8%|▊         | 4/50 [00:24<04:27,  5.82s/it][A
- 10%|█         | 5/50 [00:29<04:17,  5.72s/it][A
- 12%|█▏        | 6/50 [00:35<04:09,  5.67s/it][A
- 14%|█▍        | 7/50 [00:40<03:59,  5.58s/it][A
- 16%|█▌        | 8/50 [00:46<03:54,  5.57s/it][A
- 18%|█▊        | 9/50 [00:51<03:48,  5.57s/it][A
- 20%|██        | 10/50 [00:57<03:42,  5.57s/it][A
- 22%|██▏       | 11/50 [01:02<03:37,  5.57s/it][A
- 24%|██▍       | 12/50 [01:08<03:31,  5.56s/it][A
- 26%|██▌       | 13/50 [01:13<03:26,  5.57s/it][A
- 28%|██▊       | 14/50 [01:19<03:19,  5.53s/it][A
- 30%|███       | 15/50 [01:24<03:13,  5.54s/it][A
- 32%|███▏      | 16/50 [01:30<03:08,  5.55s/it][A
- 34%|███▍      | 17/50 [01:36<03:03,  5.55s/it][A
- 36%|███▌      | 18/50 [01:41<02:58,  5.56s/it][A
- 38%|███▊      | 19/50 [01:47<02:52,  5.57s/it][A
- 40%|████      | 20/50 [01:52<02:47,  5.58s/it][A
- 42%|████▏     | 21/50 [01:58<02:40,  5.54s/it][A
- 44%|████▍     | 22/50 [02:03<02:35,  5.57s/it][A
- 46%|████▌     | 23/50 [02:09<02:30,  5.57s/it][A
- 48%|████▊     | 24/50 [02:15<02:24,  5.57s/it][A
- 50%|█████     | 25/50 [02:20<02:19,  5.56s/it][A
- 52%|█████▏    | 26/50 [02:26<02:13,  5.57s/it][A
- 54%|█████▍    | 27/50 [02:31<02:07,  5.56s/it][A
- 56%|█████▌    | 28/50 [02:37<02:01,  5.51s/it][A
- 58%|█████▊    | 29/50 [02:42<01:55,  5.52s/it][A
- 60%|██████    | 30/50 [02:48<01:50,  5.54s/it][A
- 62%|██████▏   | 31/50 [02:53<01:45,  5.54s/it][A
- 64%|██████▍   | 32/50 [02:59<01:39,  5.55s/it][A
- 66%|██████▌   | 33/50 [03:04<01:34,  5.58s/it][A
- 68%|██████▊   | 34/50 [03:10<01:29,  5.59s/it][A
- 70%|███████   | 35/50 [03:15<01:22,  5.52s/it][A
- 72%|███████▏  | 36/50 [03:21<01:17,  5.54s/it][A
- 74%|███████▍  | 37/50 [03:27<01:12,  5.54s/it][A
- 76%|███████▌  | 38/50 [03:32<01:06,  5.54s/it][A
- 78%|███████▊  | 39/50 [03:38<01:01,  5.55s/it][A
- 80%|████████  | 40/50 [03:43<00:55,  5.55s/it][A
- 82%|████████▏ | 41/50 [03:49<00:49,  5.56s/it][A
- 84%|████████▍ | 42/50 [03:54<00:44,  5.56s/it][A
- 86%|████████▌ | 43/50 [04:00<00:38,  5.52s/it][A
- 88%|████████▊ | 44/50 [04:05<00:33,  5.54s/it][A
- 90%|█████████ | 45/50 [04:11<00:27,  5.54s/it][A
- 92%|█████████▏| 46/50 [04:16<00:21,  5.40s/it][A
- 94%|█████████▍| 47/50 [04:21<00:15,  5.13s/it][A
- 96%|█████████▌| 48/50 [04:26<00:10,  5.25s/it][A
- 98%|█████████▊| 49/50 [04:32<00:05,  5.34s/it][A
-100%|██████████| 50/50 [04:37<00:00,  5.35s/it][A100%|██████████| 50/50 [04:37<00:00,  5.55s/it]
-
-VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
-VAE decoding: 100%|██████████| 1/1 [00:17<00:00, 17.16s/it][AVAE decoding: 100%|██████████| 1/1 [00:17<00:00, 17.16s/it]
-
-Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
-To disable this warning, you can either:
-	- Avoid using `tokenizers` before the fork if possible
-	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
-
-Saving video:   1%|          | 1/81 [00:00<00:17,  4.53it/s][A
-Saving video:  91%|█████████▏| 74/81 [00:00<00:00, 289.39it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 246.14it/s]
-Processing samples:   4%|▍         | 2/50 [10:23<4:09:37, 312.02s/it]✓ Generated in 312.05s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0052_perspective-left_trimmed-double-cradle.mp4
-
-Processing 0053: 0053_perspective-center_take-1_trimmed-double-crad...
-Prompt: A Newton's cradle device on the table and two of the metal balls are held up by a blue handled grabb...
-Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0053_switch-frames_anyFPS_perspective-center_trimmed-double-cradle.jpg
-
-VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][A
-VAE encoding: 100%|██████████| 1/1 [00:00<00:00,  7.83it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00,  7.82it/s]
-
-  0%|          | 0/50 [00:00<?, ?it/s][A
-  2%|▏         | 1/50 [00:08<06:32,  8.02s/it][A
-  4%|▍         | 2/50 [00:13<05:15,  6.57s/it][A
-  6%|▌         | 3/50 [00:18<04:42,  6.02s/it][A
-  8%|▊         | 4/50 [00:24<04:28,  5.84s/it][A
- 10%|█         | 5/50 [00:30<04:18,  5.74s/it][A
- 12%|█▏        | 6/50 [00:35<04:10,  5.69s/it][A
- 14%|█▍        | 7/50 [00:40<03:52,  5.41s/it][A
- 16%|█▌        | 8/50 [00:46<03:49,  5.47s/it][A
- 18%|█▊        | 9/50 [00:51<03:45,  5.50s/it][A
- 20%|██        | 10/50 [00:57<03:39,  5.48s/it][A
- 22%|██▏       | 11/50 [01:02<03:34,  5.51s/it][A
- 24%|██▍       | 12/50 [01:08<03:29,  5.52s/it][A
- 26%|██▌       | 13/50 [01:13<03:24,  5.53s/it][A
- 28%|██▊       | 14/50 [01:19<03:19,  5.55s/it][A
- 30%|███       | 15/50 [01:24<03:14,  5.54s/it][A
- 32%|███▏      | 16/50 [01:30<03:08,  5.55s/it][A
- 34%|███▍      | 17/50 [01:35<03:01,  5.50s/it][A
- 36%|███▌      | 18/50 [01:41<02:56,  5.52s/it][A
- 38%|███▊      | 19/50 [01:46<02:51,  5.52s/it][A
- 40%|████      | 20/50 [01:52<02:46,  5.53s/it][A
- 42%|████▏     | 21/50 [01:58<02:40,  5.54s/it][A
- 44%|████▍     | 22/50 [02:03<02:35,  5.54s/it][A
- 46%|████▌     | 23/50 [02:09<02:29,  5.55s/it][A
- 48%|████▊     | 24/50 [02:14<02:22,  5.49s/it][A
- 50%|█████     | 25/50 [02:20<02:17,  5.52s/it][A
- 52%|█████▏    | 26/50 [02:25<02:12,  5.53s/it][A
- 54%|█████▍    | 27/50 [02:30<02:05,  5.44s/it][A
- 56%|█████▌    | 28/50 [02:36<02:00,  5.48s/it][A
- 58%|█████▊    | 29/50 [02:42<01:55,  5.50s/it][A
- 60%|██████    | 30/50 [02:47<01:50,  5.51s/it][A
- 62%|██████▏   | 31/50 [02:53<01:45,  5.53s/it][A
- 64%|██████▍   | 32/50 [02:58<01:39,  5.50s/it][A
- 66%|██████▌   | 33/50 [03:04<01:33,  5.52s/it][A
- 68%|██████▊   | 34/50 [03:09<01:28,  5.53s/it][A
- 70%|███████   | 35/50 [03:15<01:23,  5.53s/it][A
- 72%|███████▏  | 36/50 [03:20<01:17,  5.55s/it][A
- 74%|███████▍  | 37/50 [03:26<01:12,  5.59s/it][A
- 76%|███████▌  | 38/50 [03:32<01:07,  5.60s/it][A
- 78%|███████▊  | 39/50 [03:37<01:00,  5.54s/it][A
- 80%|████████  | 40/50 [03:43<00:55,  5.55s/it][A
- 82%|████████▏ | 41/50 [03:48<00:49,  5.55s/it][A
- 84%|████████▍ | 42/50 [03:54<00:44,  5.55s/it][A
- 86%|████████▌ | 43/50 [03:59<00:38,  5.56s/it][A
- 88%|████████▊ | 44/50 [04:05<00:33,  5.55s/it][A
- 90%|█████████ | 45/50 [04:10<00:27,  5.56s/it][A
- 92%|█████████▏| 46/50 [04:16<00:22,  5.52s/it][A
- 94%|█████████▍| 47/50 [04:21<00:16,  5.51s/it][A
- 96%|█████████▌| 48/50 [04:27<00:11,  5.52s/it][A
- 98%|█████████▊| 49/50 [04:32<00:05,  5.54s/it][A
-100%|██████████| 50/50 [04:38<00:00,  5.55s/it][A100%|██████████| 50/50 [04:38<00:00,  5.57s/it]
-
-VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
-VAE decoding: 100%|██████████| 1/1 [00:17<00:00, 17.52s/it][AVAE decoding: 100%|██████████| 1/1 [00:17<00:00, 17.52s/it]
-
-Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
-To disable this warning, you can either:
-	- Avoid using `tokenizers` before the fork if possible
-	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
-
-Saving video:   1%|          | 1/81 [00:00<00:16,  4.78it/s][A
-Saving video: 100%|██████████| 81/81 [00:00<00:00, 325.18it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 260.26it/s]
-Processing samples:   6%|▌         | 3/50 [15:39<4:05:40, 313.63s/it]✓ Generated in 314.98s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0053_perspective-center_trimmed-double-cradle.mp4
-
-Processing 0054: 0054_perspective-right_take-1_trimmed-double-cradl...
-Prompt: A Newton's cradle device on the table and two of the metal balls are held up by a blue handled grabb...
-Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0054_switch-frames_anyFPS_perspective-right_trimmed-double-cradle.jpg
-
-VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00, 10.28it/s]
-
-  0%|          | 0/50 [00:00<?, ?it/s][A
-  2%|▏         | 1/50 [00:07<06:08,  7.52s/it][A
-  4%|▍         | 2/50 [00:13<05:06,  6.38s/it][A
-  6%|▌         | 3/50 [00:18<04:41,  6.00s/it][A
-  8%|▊         | 4/50 [00:24<04:27,  5.82s/it][A
- 10%|█         | 5/50 [00:29<04:17,  5.73s/it][A
- 12%|█▏        | 6/50 [00:35<04:09,  5.67s/it][A
- 14%|█▍        | 7/50 [00:40<04:00,  5.59s/it][A
- 16%|█▌        | 8/50 [00:46<03:54,  5.59s/it][A
- 18%|█▊        | 9/50 [00:51<03:48,  5.58s/it][A
- 20%|██        | 10/50 [00:56<03:35,  5.38s/it][A
- 22%|██▏       | 11/50 [01:02<03:32,  5.46s/it][A
- 24%|██▍       | 12/50 [01:08<03:29,  5.51s/it][A
- 26%|██▌       | 13/50 [01:13<03:24,  5.52s/it][A
- 28%|██▊       | 14/50 [01:19<03:17,  5.48s/it][A
- 30%|███       | 15/50 [01:24<03:12,  5.51s/it][A
- 32%|███▏      | 16/50 [01:30<03:08,  5.55s/it][A
- 34%|███▍      | 17/50 [01:35<03:03,  5.57s/it][A
- 36%|███▌      | 18/50 [01:41<02:58,  5.59s/it][A
- 38%|███▊      | 19/50 [01:47<02:53,  5.61s/it][A
- 40%|████      | 20/50 [01:52<02:48,  5.61s/it][A
- 42%|████▏     | 21/50 [01:58<02:41,  5.55s/it][A
- 44%|████▍     | 22/50 [02:03<02:35,  5.55s/it][A
- 46%|████▌     | 23/50 [02:09<02:29,  5.55s/it][A
- 48%|████▊     | 24/50 [02:14<02:24,  5.56s/it][A
- 50%|█████     | 25/50 [02:19<02:14,  5.36s/it][A
- 52%|█████▏    | 26/50 [02:25<02:10,  5.42s/it][A
- 54%|█████▍    | 27/50 [02:30<02:05,  5.46s/it][A
- 56%|█████▌    | 28/50 [02:36<02:00,  5.46s/it][A
- 58%|█████▊    | 29/50 [02:41<01:54,  5.45s/it][A
- 60%|██████    | 30/50 [02:47<01:49,  5.48s/it][A
- 62%|██████▏   | 31/50 [02:52<01:44,  5.50s/it][A
- 64%|██████▍   | 32/50 [02:58<01:39,  5.52s/it][A
- 66%|██████▌   | 33/50 [03:03<01:33,  5.53s/it][A
- 68%|██████▊   | 34/50 [03:09<01:28,  5.53s/it][A
- 70%|███████   | 35/50 [03:14<01:22,  5.49s/it][A
- 72%|███████▏  | 36/50 [03:20<01:17,  5.51s/it][A
- 74%|███████▍  | 37/50 [03:25<01:11,  5.52s/it][A
- 76%|███████▌  | 38/50 [03:31<01:06,  5.53s/it][A
- 78%|███████▊  | 39/50 [03:37<01:00,  5.54s/it][A
- 80%|████████  | 40/50 [03:42<00:55,  5.54s/it][A
- 82%|████████▏ | 41/50 [03:48<00:49,  5.54s/it][A
- 84%|████████▍ | 42/50 [03:53<00:44,  5.52s/it][A
- 86%|████████▌ | 43/50 [03:59<00:38,  5.53s/it][A
- 88%|████████▊ | 44/50 [04:04<00:33,  5.54s/it][A
- 90%|█████████ | 45/50 [04:10<00:27,  5.54s/it][A
- 92%|█████████▏| 46/50 [04:15<00:22,  5.55s/it][A
- 94%|█████████▍| 47/50 [04:21<00:16,  5.55s/it][A
- 96%|█████████▌| 48/50 [04:27<00:11,  5.56s/it][A
- 98%|█████████▊| 49/50 [04:32<00:05,  5.53s/it][A
-100%|██████████| 50/50 [04:38<00:00,  5.55s/it][A100%|██████████| 50/50 [04:38<00:00,  5.56s/it]
-
-VAE decoding:   0%|          | 0/1 [00:00<?, ?it/s][A
-VAE decoding: 100%|██████████| 1/1 [00:15<00:00, 15.56s/it][AVAE decoding: 100%|██████████| 1/1 [00:15<00:00, 15.56s/it]
-
-Saving video:   0%|          | 0/81 [00:00<?, ?it/s][Ahuggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
-To disable this warning, you can either:
-	- Avoid using `tokenizers` before the fork if possible
-	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
-
-Saving video:   1%|          | 1/81 [00:00<00:17,  4.48it/s][A
-Saving video: 100%|██████████| 81/81 [00:00<00:00, 313.58it/s][ASaving video: 100%|██████████| 81/81 [00:00<00:00, 249.40it/s]
-Processing samples:   8%|▊         | 4/50 [20:49<3:59:23, 312.26s/it]✓ Generated in 309.61s -> physics_iq_results_stage2_long_step1000/.wan22_ti2v_stage2_lora/0054_perspective-right_trimmed-double-cradle.mp4
-
-Processing 0055: 0055_perspective-left_take-1_trimmed-duck-and-domi...
-Prompt: A yellow rubber duck is positioned in the middle of a line of black and white dominoes on a wooden t...
-Image: /nyx-storage1/hanliu/physics-IQ-benchmark/physics-IQ-benchmark/switch-frames/0055_switch-frames_anyFPS_perspective-left_trimmed-duck-and-dominos.jpg
-
-VAE encoding:   0%|          | 0/1 [00:00<?, ?it/s][A
-VAE encoding: 100%|██████████| 1/1 [00:00<00:00,  8.33it/s][AVAE encoding: 100%|██████████| 1/1 [00:00<00:00,  8.32it/s]
-
-  0%|          | 0/50 [00:00<?, ?it/s][A
