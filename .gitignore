@@ -1,7 +1,7 @@
 *.mp4
 test_*
-./physics_iq_results
-./phygenbench_results
+./physics_iq_results*
+./phygenbench_results*
 wandb/
 *.pyc
 **/__pycache__/
