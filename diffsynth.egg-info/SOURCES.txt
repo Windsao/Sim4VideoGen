@@ -100,6 +100,7 @@ diffsynth/models/qwen_image_dit.py
 diffsynth/models/qwen_image_text_encoder.py
 diffsynth/models/qwen_image_vae.py
 diffsynth/models/qwenvl.py
+diffsynth/models/rgb_warp_loss.py
 diffsynth/models/sd3_dit.py
 diffsynth/models/sd3_text_encoder.py
 diffsynth/models/sd3_vae_decoder.py
@@ -118,6 +119,7 @@ diffsynth/models/sdxl_text_encoder.py
 diffsynth/models/sdxl_unet.py
 diffsynth/models/sdxl_vae_decoder.py
 diffsynth/models/sdxl_vae_encoder.py
+diffsynth/models/spatiotemporal_depth_head.py
 diffsynth/models/step1x_connector.py
 diffsynth/models/stepvideo_dit.py
 diffsynth/models/stepvideo_text_encoder.py
@@ -130,6 +132,7 @@ diffsynth/models/tiler.py
 diffsynth/models/utils.py
 diffsynth/models/wan_video_camera_controller.py
 diffsynth/models/wan_video_dit.py
+diffsynth/models/wan_video_dit_motion.py
 diffsynth/models/wan_video_dit_s2v.py
 diffsynth/models/wan_video_image_encoder.py
 diffsynth/models/wan_video_motion_controller.py
@@ -235,6 +238,7 @@ diffsynth/tokenizer_configs/stable_diffusion_xl/tokenizer_2/special_tokens_map.j
 diffsynth/tokenizer_configs/stable_diffusion_xl/tokenizer_2/tokenizer_config.json
 diffsynth/tokenizer_configs/stable_diffusion_xl/tokenizer_2/vocab.json
 diffsynth/trainers/__init__.py
+diffsynth/trainers/image_sequence_loader.py
 diffsynth/trainers/text_to_image.py
 diffsynth/trainers/unified_dataset.py
 diffsynth/trainers/utils.py

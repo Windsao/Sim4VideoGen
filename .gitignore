@@ -4,3 +4,4 @@ test_*
 ./phygenbench_results
 wandb/
 *.pyc
+ **/__pycache__/
