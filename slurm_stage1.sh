@@ -13,18 +13,27 @@
 ###############################################################################
 
 # Set CUDA device (modify if needed)
-export CUDA_VISIBLE_DEVICES=0,1,2,3
+export CUDA_VISIBLE_DEVICES=0,1
 
 # ============================================
 # Paths Configuration
 # ============================================
 
 # Base path for models (modify to your local path)
-MODEL_BASE_PATH="/projects/p32294"
+MODEL_BASE_PATH="/home/vcj9002"
 
 # Training data paths
 DATASET_BASE_PATH="/projects/p32294/TestOutput"
 DATASET_METADATA_PATH="./data/sim_physics_metadata.csv"
+USE_LARGE_DATASET=true
+
+if [ "$USE_LARGE_DATASET" = true ]; then
+  DATASET_PRESET="magic_physics"
+  DATASET_BASE_PATH="/scratch/vcj9002/MagicPhysics"
+  DATASET_METADATA_PATH="./data/magic_physics_dataset/metadata.csv"
+else
+  DATASET_PRESET="sim_physics"
+fi
 
 
 # ============================================
@@ -143,11 +152,12 @@ echo ""
 # Run Stage 1 Training
 ###############################################################################
 
-accelerate launch --mixed_precision bf16 --num_processes 4 \
+accelerate launch --mixed_precision bf16 --num_processes 2 \
   train_wan22_ti2v_motion_depth.py \
   --dataset_base_path "$DATASET_BASE_PATH" \
   --dataset_metadata_path "$DATASET_METADATA_PATH" \
-  --dataset_repeat 500 \
+  --dataset_preset "$DATASET_PRESET" \
+  --dataset_repeat 10 \
   --height $HEIGHT \
   --width $WIDTH \
   --num_frames $NUM_FRAMES \

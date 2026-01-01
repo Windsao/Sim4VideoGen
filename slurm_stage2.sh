@@ -24,6 +24,15 @@ MODEL_BASE_PATH="/projects/p32294"
 # Training data paths
 DATASET_BASE_PATH="/projects/p32294/TestOutput"
 DATASET_METADATA_PATH="./data/sim_physics_metadata.csv"
+USE_LARGE_DATASET=false
+
+if [ "$USE_LARGE_DATASET" = true ]; then
+  DATASET_PRESET="magic_physics"
+  DATASET_BASE_PATH="/scratch/vcj9002/MagicPhysics"
+  DATASET_METADATA_PATH="./data/magic_physics_dataset/metadata.csv"
+else
+  DATASET_PRESET="sim_physics"
+fi
 
 # Video dimensions (must match Stage 1)
 HEIGHT=480
@@ -131,6 +140,7 @@ accelerate launch --mixed_precision bf16 --num_processes 4 \
   train_wan22_stage2_finetune.py \
   --dataset_base_path "$DATASET_BASE_PATH" \
   --dataset_metadata_path "$DATASET_METADATA_PATH" \
+  --dataset_preset "$DATASET_PRESET" \
   --dataset_repeat 500 \
   --height $HEIGHT \
   --width $WIDTH \

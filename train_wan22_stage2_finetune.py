@@ -99,8 +99,21 @@ def main() -> None:
     parser = argparse.ArgumentParser()
 
     # Dataset parameters
-    parser.add_argument("--dataset_base_path", type=str, required=True)
-    parser.add_argument("--dataset_metadata_path", type=str, required=True)
+    parser.add_argument("--dataset_base_path", type=str, default=None)
+    parser.add_argument("--dataset_metadata_path", type=str, default=None)
+    parser.add_argument(
+        "--dataset_preset",
+        type=str,
+        default=None,
+        choices=["sim_physics", "magic_physics"],
+        help="Use a predefined dataset mapping for base/metadata paths.",
+    )
+    parser.add_argument("--rgb_subdir", type=str, default=None)
+    parser.add_argument("--motion_subdir", type=str, default=None)
+    parser.add_argument("--depth_subdir", type=str, default=None)
+    parser.add_argument("--image_pattern", type=str, default=None)
+    parser.add_argument("--motion_pattern", type=str, default=None)
+    parser.add_argument("--depth_pattern", type=str, default=None)
     parser.add_argument("--dataset_repeat", type=int, default=1)
     parser.add_argument("--height", type=int, default=480)
     parser.add_argument("--width", type=int, default=832)
@@ -181,6 +194,66 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    if args.dataset_preset:
+        preset_map = {
+            "sim_physics": {
+                "base_path": os.environ.get("SIM_PHYSICS_ROOT", "/projects/p32294/TestOutput"),
+                "metadata_path": os.environ.get("SIM_PHYSICS_METADATA", "./data/sim_physics_metadata.csv"),
+                "rgb_subdir": "rgb",
+                "motion_subdir": "motion_vectors",
+                "depth_subdir": "distance_to_camera",
+                "image_pattern": "*.png",
+                "motion_pattern": "*.npy",
+                "depth_pattern": "*.npy",
+            },
+            "magic_physics": {
+                "base_path": os.environ.get("MAGIC_PHYSICS_ROOT", "/scratch/vcj9002/MagicPhysics"),
+                "metadata_path": os.environ.get("MAGIC_PHYSICS_METADATA", "./data/magic_physics_dataset/metadata.csv"),
+                "rgb_subdir": "rgb_capture",
+                "motion_subdir": "motion_vectors_capture",
+                "depth_subdir": "distance_to_camera_capture",
+                "image_pattern": "*.png",
+                "motion_pattern": "*.npy",
+                "depth_pattern": "*.npy",
+            },
+        }
+        preset = preset_map[args.dataset_preset]
+        if not args.dataset_base_path:
+            args.dataset_base_path = preset["base_path"]
+        if not args.dataset_metadata_path:
+            args.dataset_metadata_path = preset["metadata_path"]
+        if not args.rgb_subdir:
+            args.rgb_subdir = preset["rgb_subdir"]
+        if not args.motion_subdir:
+            args.motion_subdir = preset["motion_subdir"]
+        if not args.depth_subdir:
+            args.depth_subdir = preset["depth_subdir"]
+        if not args.image_pattern:
+            args.image_pattern = preset["image_pattern"]
+        if not args.motion_pattern:
+            args.motion_pattern = preset["motion_pattern"]
+        if not args.depth_pattern:
+            args.depth_pattern = preset["depth_pattern"]
+
+    if not args.rgb_subdir:
+        args.rgb_subdir = "rgb"
+    if not args.motion_subdir:
+        args.motion_subdir = "motion_vectors"
+    if not args.depth_subdir:
+        args.depth_subdir = "distance_to_camera"
+    if not args.image_pattern:
+        args.image_pattern = "*.png"
+    if not args.motion_pattern:
+        args.motion_pattern = "*.npy"
+    if not args.depth_pattern:
+        args.depth_pattern = "*.npy"
+
+    if not args.dataset_base_path or not args.dataset_metadata_path:
+        raise ValueError(
+            "Both --dataset_base_path and --dataset_metadata_path are required "
+            "unless --dataset_preset is provided."
+        )
+
     args.model_paths = normalize_model_paths_arg(args.model_paths)
     if os.environ.get("RANK", "0") == "0":
         print(f"[INFO] Resolved --model_paths: {summarize_model_paths(args.model_paths)}")
@@ -221,6 +294,12 @@ def main() -> None:
             depth_scale=1.0,
             normalize_depth=False,
             load_depth=True,
+            image_pattern=args.image_pattern,
+            motion_pattern=args.motion_pattern,
+            depth_pattern=args.depth_pattern,
+            rgb_subdir=args.rgb_subdir,
+            motion_subdir=args.motion_subdir,
+            depth_subdir=args.depth_subdir,
         ),
     )
 
