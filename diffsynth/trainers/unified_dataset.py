@@ -235,6 +235,8 @@ class UnifiedDataset(torch.utils.data.Dataset):
         data_file_keys=tuple(),
         main_data_operator=lambda x: x,
         special_operator_map=None,
+        validate_data_paths=False,
+        data_path_types=None,
     ):
         self.base_path = base_path
         self.metadata_path = metadata_path
@@ -243,10 +245,14 @@ class UnifiedDataset(torch.utils.data.Dataset):
         self.main_data_operator = main_data_operator
         self.cached_data_operator = LoadTorchPickle()
         self.special_operator_map = {} if special_operator_map is None else special_operator_map
+        self.validate_data_paths = validate_data_paths
+        self.data_path_types = {} if data_path_types is None else data_path_types
         self.data = []
         self.cached_data = []
         self.load_from_cache = metadata_path is None
         self.load_metadata(metadata_path)
+        if self.validate_data_paths and not self.load_from_cache:
+            self.filter_invalid_data()
     
     @staticmethod
     def default_image_operator(
@@ -303,6 +309,43 @@ class UnifiedDataset(torch.utils.data.Dataset):
         else:
             metadata = pandas.read_csv(metadata_path)
             self.data = [metadata.iloc[i].to_dict() for i in range(len(metadata))]
+
+    def resolve_path(self, path):
+        if path is None:
+            return None
+        if self.base_path and not os.path.isabs(path):
+            return os.path.join(self.base_path, path)
+        return path
+
+    def filter_invalid_data(self):
+        if not self.data_file_keys:
+            return
+        valid_data = []
+        invalid_count = 0
+        for row in self.data:
+            is_valid = True
+            for key in self.data_file_keys:
+                if key not in row:
+                    continue
+                path = self.resolve_path(row[key])
+                if path is None:
+                    continue
+                path_type = self.data_path_types.get(key)
+                if path_type == "dir":
+                    if not os.path.isdir(path):
+                        is_valid = False
+                        break
+                elif path_type == "file":
+                    if not os.path.isfile(path):
+                        is_valid = False
+                        break
+            if is_valid:
+                valid_data.append(row)
+            else:
+                invalid_count += 1
+        if invalid_count > 0 and os.environ.get("RANK", "0") == "0":
+            print(f"[WARN] Filtered out {invalid_count} samples with missing paths.")
+        self.data = valid_data
 
     def __getitem__(self, data_id):
         if self.load_from_cache:

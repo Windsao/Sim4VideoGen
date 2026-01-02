@@ -13,7 +13,7 @@
 ###############################################################################
 
 # Set CUDA device (modify if needed)
-export CUDA_VISIBLE_DEVICES=0,1,2,3
+export CUDA_VISIBLE_DEVICES=0,1
 
 # ============================================
 # Paths Configuration
@@ -87,7 +87,7 @@ WARP_LOSS_TYPE="mse"
 
 # Optional: Use spatio-temporal depth head (keep in sync with Stage 2)
 USE_SPATIOTEMPORAL_DEPTH=true
-SPATIOTEMPORAL_DEPTH_TYPE="simple"  # "simple" or "full"
+SPATIOTEMPORAL_DEPTH_TYPE="full"  # "simple" or "full"
 
 # Output path (will save checkpoints locally)
 if [ "$USE_SPATIOTEMPORAL_DEPTH" = true ]; then
@@ -105,14 +105,24 @@ fi
 # Wandb Configuration (Optional)
 # ============================================
 
-USE_WANDB=false
+USE_WANDB=true
 if [ "$USE_SPATIOTEMPORAL_DEPTH" = true ]; then
   if [ "$SPATIOTEMPORAL_DEPTH_TYPE" = "full" ]; then
-    WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-full"
-    WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-full"
+    if USE_LARGE_DATASET; then
+      WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-full-large"
+      WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-full-large"
+    else
+      WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-full-small"
+      WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-full-small"
+    fi
   else
-    WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-simple"
-    WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-simple"
+    if USE_LARGE_DATASET; then
+      WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-simple-large"
+      WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-simple-large"
+    else
+      WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-simple-small"
+      WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-simple-small"
+    fi
   fi
 else
   WANDB_PROJECT="wan22-ti2v-stage1-heads"
@@ -152,12 +162,13 @@ echo ""
 # Run Stage 1 Training
 ###############################################################################
 
-accelerate launch --mixed_precision bf16 --num_processes 4 \
+accelerate launch --mixed_precision bf16 --num_processes 2 \
   train_wan22_ti2v_motion_depth.py \
   --dataset_base_path "$DATASET_BASE_PATH" \
   --dataset_metadata_path "$DATASET_METADATA_PATH" \
   --dataset_preset "$DATASET_PRESET" \
   --dataset_repeat 10 \
+  --validate_dataset_paths \
   --height $HEIGHT \
   --width $WIDTH \
   --num_frames $NUM_FRAMES \
