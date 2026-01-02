@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH -A p32294 ## Required: your allocation/account name, i.e. eXXXX, pXXXX or bXXXX
+#SBATCH -A p32958 ## Required: your allocation/account name, i.e. eXXXX, pXXXX or bXXXX
 #SBATCH -p gengpu ## Required: (buyin, short, normal, long, gengpu, genhimem, etc)
 #SBATCH --gres gpu:h100:4
 
-#SBATCH -t 12:00:00 ## Required: How long will the job need to run (remember different partitions have restrictions on this parameter)
+#SBATCH -t 48:00:00 ## Required: How long will the job need to run (remember different partitions have restrictions on this parameter)
 #SBATCH --nodes 1 ## how many computers/nodes do you need (no default)
 #SBATCH --cpus-per-task 64
 #SBATCH --mem 300G ## how much RAM do you need per computer/node (this affects your FairShare score so be careful to not ask for more than you need))

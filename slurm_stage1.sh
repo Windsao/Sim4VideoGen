@@ -13,7 +13,7 @@
 ###############################################################################
 
 # Set CUDA device (modify if needed)
-export CUDA_VISIBLE_DEVICES=0,1
+export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 # ============================================
 # Paths Configuration
@@ -152,7 +152,7 @@ echo ""
 # Run Stage 1 Training
 ###############################################################################
 
-accelerate launch --mixed_precision bf16 --num_processes 2 \
+accelerate launch --mixed_precision bf16 --num_processes 4 \
   train_wan22_ti2v_motion_depth.py \
   --dataset_base_path "$DATASET_BASE_PATH" \
   --dataset_metadata_path "$DATASET_METADATA_PATH" \
