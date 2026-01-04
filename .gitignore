@@ -3,9 +3,9 @@ test_*
 ./physics_iq_results*
 ./phygenbench_results*
 wandb/
+job*.sh
+slurm*.sh
 *.pyc
 **/__pycache__/
 shang/
 logs/
-slurm_*
-job_*
