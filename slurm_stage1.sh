@@ -13,7 +13,7 @@
 ###############################################################################
 
 # Set CUDA device (modify if needed)
-export CUDA_VISIBLE_DEVICES=0,1
+export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 # ============================================
 # Paths Configuration
@@ -108,7 +108,7 @@ fi
 USE_WANDB=true
 if [ "$USE_SPATIOTEMPORAL_DEPTH" = true ]; then
   if [ "$SPATIOTEMPORAL_DEPTH_TYPE" = "full" ]; then
-    if USE_LARGE_DATASET; then
+    if ["$USE_LARGE_DATASET" = true]; then
       WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-full-large"
       WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-full-large"
     else
@@ -116,7 +116,7 @@ if [ "$USE_SPATIOTEMPORAL_DEPTH" = true ]; then
       WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-full-small"
     fi
   else
-    if USE_LARGE_DATASET; then
+    if ["$USE_LARGE_DATASET" = true]; then
       WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-simple-large"
       WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-simple-large"
     else
@@ -162,7 +162,7 @@ echo ""
 # Run Stage 1 Training
 ###############################################################################
 
-accelerate launch --mixed_precision bf16 --num_processes 2 \
+accelerate launch --mixed_precision bf16 --num_processes 4 \
   train_wan22_ti2v_motion_depth.py \
   --dataset_base_path "$DATASET_BASE_PATH" \
   --dataset_metadata_path "$DATASET_METADATA_PATH" \

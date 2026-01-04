@@ -115,6 +115,7 @@ def main() -> None:
     parser.add_argument("--motion_pattern", type=str, default=None)
     parser.add_argument("--depth_pattern", type=str, default=None)
     parser.add_argument("--dataset_repeat", type=int, default=1)
+    parser.add_argument("--validate_dataset_paths", action="store_true")
     parser.add_argument("--height", type=int, default=480)
     parser.add_argument("--width", type=int, default=832)
     parser.add_argument("--num_frames", type=int, default=49)
@@ -278,6 +279,8 @@ def main() -> None:
         metadata_path=args.dataset_metadata_path,
         repeat=args.dataset_repeat,
         data_file_keys=["video"],
+        validate_data_paths=args.validate_dataset_paths,
+        data_path_types={"video": "dir"},
         main_data_operator=create_motion_data_operator(
             base_path=args.dataset_base_path,
             max_pixels=args.height * args.width,
@@ -302,6 +305,11 @@ def main() -> None:
             depth_subdir=args.depth_subdir,
         ),
     )
+    if args.validate_dataset_paths and len(dataset) == 0:
+        raise RuntimeError(
+            "No valid samples found after path validation. "
+            "Check --dataset_base_path and --dataset_metadata_path."
+        )
 
     dataloader = torch.utils.data.DataLoader(
         dataset,

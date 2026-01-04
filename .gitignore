@@ -7,3 +7,5 @@ wandb/
 **/__pycache__/
 shang/
 logs/
+slurm_*
+job_*

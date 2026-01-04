@@ -19,12 +19,12 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 # ============================================
 
 # Base path for models (modify to your local path)
-MODEL_BASE_PATH="/projects/p32294"
+MODEL_BASE_PATH="/home/vcj9002"
 
 # Training data paths
 DATASET_BASE_PATH="/projects/p32294/TestOutput"
 DATASET_METADATA_PATH="./data/sim_physics_metadata.csv"
-USE_LARGE_DATASET=false
+USE_LARGE_DATASET=true
 
 if [ "$USE_LARGE_DATASET" = true ]; then
   DATASET_PRESET="magic_physics"
@@ -127,6 +127,7 @@ WARP_LOSS_TYPE="mse"
 USE_RGB_WARP_LOSS=true
 RGB_WARP_LOSS_WEIGHT=0.1
 RGB_WARP_LOSS_TYPE="l1"
+VALIDATE_DATASET_PATHS=true
 
 echo "=========================================================================="
 echo "Stage 2 Fine-tuning (FINETUNE_MODE=${FINETUNE_MODE})"
@@ -141,10 +142,11 @@ accelerate launch --mixed_precision bf16 --num_processes 4 \
   --dataset_base_path "$DATASET_BASE_PATH" \
   --dataset_metadata_path "$DATASET_METADATA_PATH" \
   --dataset_preset "$DATASET_PRESET" \
-  --dataset_repeat 500 \
+  --dataset_repeat 10 \
   --height $HEIGHT \
   --width $WIDTH \
   --num_frames $NUM_FRAMES \
+  $([ "$VALIDATE_DATASET_PATHS" = true ] && echo "--validate_dataset_paths" || echo "") \
   --model_paths "[\"${WAN22_DIT_DIR}\", \"${WAN22_T5_MODEL}\", \"${WAN22_MODEL_DIR}/Wan2.2_VAE.pth\"]" \
   --tokenizer_path "${WAN22_TOKENIZER_DIR}" \
   --output_path "$OUTPUT_PATH" \
