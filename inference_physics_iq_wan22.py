@@ -106,7 +106,7 @@ def resolve_wan22_dit_path(wan22_dit_dir: str):
     return wan22_dit_dir
 
 
-def load_wan22_pipeline(device="cuda", model_base_path=BASE_MODEL_PATH, lora_checkpoint=None):
+def load_wan22_pipeline(device="cuda", model_base_path=BASE_MODEL_PATH, lora_checkpoint=None, dit_checkpoint=None):
     """Load WAN2.2-TI2V-5B model pipeline (using local checkpoints)."""
     print("Loading Wan2.2-TI2V-5B model from local checkpoints...")
     print("Using local checkpoint files from:", model_base_path)
@@ -125,6 +125,15 @@ def load_wan22_pipeline(device="cuda", model_base_path=BASE_MODEL_PATH, lora_che
         ],
         tokenizer_config=ModelConfig(path=tokenizer_dir),
     )
+
+    if dit_checkpoint and Path(dit_checkpoint).exists():
+        print(f"Loading finetuned DiT checkpoint: {dit_checkpoint}")
+        dit_state_dict = load_state_dict(dit_checkpoint)
+        missing, unexpected = pipe.dit.load_state_dict(dit_state_dict, strict=False)
+        if missing:
+            print(f"[WARN] Missing DiT keys: {len(missing)}")
+        if unexpected:
+            print(f"[WARN] Unexpected DiT keys: {len(unexpected)}")
 
     if lora_checkpoint and Path(lora_checkpoint).exists():
         print(f"Loading LoRA checkpoint: {lora_checkpoint}")
@@ -242,6 +251,8 @@ def main():
                        help="Base path for WAN2.2 checkpoints")
     parser.add_argument("--lora_checkpoint", type=str, default=None,
                        help="Path to Stage 2 LoRA checkpoint (lora_weights.pth)")
+    parser.add_argument("--dit_checkpoint", type=str, default=None,
+                       help="Path to finetuned DiT checkpoint (dit.pth)")
     parser.add_argument("--max_samples", type=int, default=None,
                        help="Maximum number of samples to process (None for all)")
     parser.add_argument("--height", type=int, default=480,
@@ -336,6 +347,7 @@ def main():
         device=args.device,
         model_base_path=args.model_base_path,
         lora_checkpoint=args.lora_checkpoint,
+        dit_checkpoint=args.dit_checkpoint,
     )
 
     # Process samples

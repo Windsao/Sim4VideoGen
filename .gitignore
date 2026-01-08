@@ -1,6 +1,6 @@
 *.mp4
 test_*
-./physics_iq_results*
+physics_iq_*
 ./phygenbench_results*
 wandb/
 job*.sh

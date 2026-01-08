@@ -15,7 +15,7 @@ echo -e "${BLUE}Physics-IQ Benchmark Wan2.2-TI2V-5B Stage2 LoRA${NC}"
 echo -e "${BLUE}================================================${NC}"
 
 # Configuration
-OUTPUT_DIR="physics_iq_results_stage2"
+OUTPUT_DIR="physics_iq_results_stage2_large_dataset"
 MODEL_NAME="wan22_ti2v_stage2_lora"
 MAX_SAMPLES=""  # Leave empty for all samples, or set a number like "10"
 NUM_FRAMES=81   # 81 frames at 16fps = ~5 seconds (benchmark requirement)
@@ -28,7 +28,7 @@ SEED=42
 DEVICE="cuda"
 WORLD_SIZE=4
 MODEL_BASE_PATH="/nyx-storage1/hanliu/world_model_ckpt"
-LORA_DIR="/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage2_spatio_depth_simple/final"
+LORA_DIR="/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/full_data/"
 LORA_CKPT=""
 
 # Parse command line arguments
@@ -231,10 +231,10 @@ for rank in $(seq 0 $((WORLD_SIZE-1))); do
         CMD="$CMD $RESIZE_INPUT"
     fi
 
-    CUDA_VISIBLE_DEVICES=$rank $CMD > logs/stage2_gpu_${rank}.log 2>&1 &
+    CUDA_VISIBLE_DEVICES=$rank $CMD > logs/stage2_long_gpu_${rank}.log 2>&1 &
 
     PID=$!
-    echo "GPU $rank started with PID $PID (log: logs/stage2_gpu_${rank}.log)"
+    echo "GPU $rank started with PID $PID (log: logs/stage2_long_gpu_${rank}.log)"
     sleep 2
 done
 
@@ -243,15 +243,15 @@ echo "================================================"
 echo "All GPU processes launched!"
 echo "================================================"
 echo "Monitor progress with:"
-echo "  tail -f logs/stage2_gpu_0.log"
-echo "  tail -f logs/stage2_gpu_1.log"
-echo "  tail -f logs/stage2_gpu_2.log"
-echo "  tail -f logs/stage2_gpu_3.log"
+echo "  tail -f logs/stage2_long_gpu_0.log"
+echo "  tail -f logs/stage2_long_gpu_1.log"
+echo "  tail -f logs/stage2_long_gpu_2.log"
+echo "  tail -f logs/stage2_long_gpu_3.log"
 echo ""
 echo "Or monitor all at once:"
-echo "  tail -f logs/stage2_gpu_*.log"
+echo "  tail -f logs/stage2_long_gpu_*.log"
 echo ""
-echo "Check running processes:"
+echo "Check running processes:" 
 echo "  ps aux | grep '$SCRIPT_PATH'"
 echo ""
 echo "To wait for all processes to complete:"

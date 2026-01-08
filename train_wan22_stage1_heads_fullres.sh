@@ -1,15 +1,12 @@
 #!/bin/bash
 
 ###############################################################################
-# Stage 1: Train Motion Head and Depth Head Only (Backbone Frozen)
+# Stage 1: Train Motion/Depth Heads with Full-Resolution Outputs
 #
-# This stage trains only the motion and depth prediction heads while keeping
-# the DiT backbone completely frozen. This allows the heads to learn their
-# tasks without interfering with the pre-trained video generation model.
-#
-# After training completes, checkpoints will be saved to:
-#   ${MODEL_BASE_PATH}/wan22_ti2v_stage1/checkpoint-{step}/
-#   ${MODEL_BASE_PATH}/wan22_ti2v_stage1/final/
+# This stage trains motion/depth heads that upsample to full video resolution.
+# Checkpoints will be saved to:
+#   ${MODEL_BASE_PATH}/wan22_ti2v_stage1_fullres/checkpoint-{step}/
+#   ${MODEL_BASE_PATH}/wan22_ti2v_stage1_fullres/final/
 ###############################################################################
 
 # Set CUDA device (modify if needed)
@@ -20,21 +17,20 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 # ============================================
 
 # Base path for models (modify to your local path)
-MODEL_BASE_PATH="/nyx-storage1/hanliu"
+MODEL_BASE_PATH="/nyx-storage1/hanliu/world_model_ckpt/Wan-AI"
 
 # Training data paths
-DATASET_BASE_PATH="/nyx-storage1/hanliu/TestOutput"
-DATASET_METADATA_PATH="./data/sim_physics_metadata.csv"
+DATASET_BASE_PATH="/nyx-storage1/hanliu/Sim_Physics/TestOutput"
+DATASET_METADATA_PATH="/home/mzh1800/DiffSynth-Studio/data/sim_physics_metadata.csv"
 USE_LARGE_DATASET=true
 
 if [ "$USE_LARGE_DATASET" = true ]; then
   DATASET_PRESET="magic_physics"
   DATASET_BASE_PATH="/nyx-storage1/hanliu/MagicPhysics"
-  DATASET_METADATA_PATH="./data/magic_physics_dataset/metadata.csv"
+  DATASET_METADATA_PATH="/home/mzh1800/DiffSynth-Studio/data/magic_physics_dataset/metadata.csv"
 else
   DATASET_PRESET="sim_physics"
 fi
-
 
 # ============================================
 # Video Configuration
@@ -43,23 +39,17 @@ fi
 # Video dimensions (matched to Sim_Physics dataset)
 HEIGHT=480
 WIDTH=480
-NUM_FRAMES=49  # Will sample 49 frames from 131 available frames
+NUM_FRAMES=49
 
 # ============================================
 # Model Configuration (Local Paths)
 # ============================================
 
-# Use locally downloaded WAN2.2-5B model checkpoints
-# Note: Wan2.2-TI2V-5B uses sharded model format
-# - DiT: Point to directory (auto-loads all sharded safetensors files)
-# - T5: Use from Wan2.1 (shared across versions)
-# - VAE: Use from Wan2.2
 WAN22_MODEL_DIR="${MODEL_BASE_PATH}/Wan2.2-TI2V-5B"
 WAN21_T5_MODEL="${MODEL_BASE_PATH}/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth"
 WAN21_TOKENIZER_DIR="${MODEL_BASE_PATH}/Wan2.2-TI2V-5B/google/umt5-xxl"
 
-# Some WAN2.2 releases store the sharded DiT weights in a nested folder with an index JSON.
-# Prefer that folder when it exists.
+# Prefer nested DiT folder when available.
 WAN22_DIT_DIR="${WAN22_MODEL_DIR}"
 if [ -d "${WAN22_MODEL_DIR}/Wan-AI/Wan2___2-TI2V-5B" ]; then
   WAN22_DIT_DIR="${WAN22_MODEL_DIR}/Wan-AI/Wan2___2-TI2V-5B"
@@ -69,7 +59,7 @@ fi
 # Training Hyperparameters
 # ============================================
 
-LEARNING_RATE=1e-4  # Higher LR for heads-only training
+LEARNING_RATE=1e-4
 NUM_EPOCHS=10
 BATCH_SIZE=1
 GRADIENT_ACCUMULATION_STEPS=8
@@ -89,44 +79,28 @@ WARP_LOSS_TYPE="mse"
 USE_SPATIOTEMPORAL_DEPTH=true
 SPATIOTEMPORAL_DEPTH_TYPE="full"  # "simple" or "full"
 
-# Output path (will save checkpoints locally)
-if [ "$USE_SPATIOTEMPORAL_DEPTH" = true ]; then
-  if [ "$SPATIOTEMPORAL_DEPTH_TYPE" = "full" ]; then
-    OUTPUT_PATH="${MODEL_BASE_PATH}/wan22_ti2v_stage1_spatio_depth_full"
-  else
-    OUTPUT_PATH="${MODEL_BASE_PATH}/wan22_ti2v_stage1_spatio_depth_simple"
-  fi
-else
-  OUTPUT_PATH="${MODEL_BASE_PATH}/wan22_ti2v_stage1"
-fi
+# Optional: Use spatio-temporal motion head (keep in sync with Stage 2)
+USE_SPATIOTEMPORAL_MOTION=true
+SPATIOTEMPORAL_MOTION_TYPE="full"  # "simple" or "full"
 
+# Output path
+if [ "$USE_LARGE_DATASET" = true ]; then
+  OUTPUT_PATH="${MODEL_BASE_PATH}/wan22_ti2v_stage1_fullres_large"
+else
+  OUTPUT_PATH="${MODEL_BASE_PATH}/wan22_ti2v_stage1_fullres"
+fi
 
 # ============================================
 # Wandb Configuration (Optional)
 # ============================================
 
 USE_WANDB=true
-if [ "$USE_SPATIOTEMPORAL_DEPTH" = true ]; then
-  if [ "$SPATIOTEMPORAL_DEPTH_TYPE" = "full" ]; then
-    if ["$USE_LARGE_DATASET" = true]; then
-      WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-full-large"
-      WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-full-large"
-    else
-      WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-full-small"
-      WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-full-small"
-    fi
-  else
-    if ["$USE_LARGE_DATASET" = true]; then
-      WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-simple-large"
-      WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-simple-large"
-    else
-      WANDB_PROJECT="wan22-ti2v-stage1-heads-spatio-depth-simple-small"
-      WANDB_NAME="wan22-ti2v-stage1-heads-spatio-depth-simple-small"
-    fi
-  fi
+if [ "$USE_LARGE_DATASET" = true ]; then
+  WANDB_PROJECT="wan22-ti2v-stage1-heads-fullres-large"
+  WANDB_NAME="wan22-ti2v-stage1-heads-fullres-large"
 else
-  WANDB_PROJECT="wan22-ti2v-stage1-heads"
-  WANDB_NAME="wan22-ti2v-stage1-heads"
+  WANDB_PROJECT="wan22-ti2v-stage1-heads-fullres"
+  WANDB_NAME="wan22-ti2v-stage1-heads-fullres"
 fi
 
 # ============================================
@@ -134,7 +108,7 @@ fi
 # ============================================
 
 echo "========================================="
-echo "WAN2.2-5B Stage 1: Train Heads Only"
+echo "WAN2.2-5B Stage 1: Train Full-Res Heads"
 echo "========================================="
 echo ""
 echo "Model base path: ${MODEL_BASE_PATH}"
@@ -167,7 +141,7 @@ accelerate launch --mixed_precision bf16 --num_processes 4 \
   --dataset_base_path "$DATASET_BASE_PATH" \
   --dataset_metadata_path "$DATASET_METADATA_PATH" \
   --dataset_preset "$DATASET_PRESET" \
-  --dataset_repeat 10 \
+  --dataset_repeat 5 \
   --validate_dataset_paths \
   --height $HEIGHT \
   --width $WIDTH \
@@ -176,6 +150,7 @@ accelerate launch --mixed_precision bf16 --num_processes 4 \
   --tokenizer_path "${WAN21_TOKENIZER_DIR}" \
   --output_path "$OUTPUT_PATH" \
   --training_mode heads_only \
+  --full_res_heads \
   --motion_channels 4 \
   --motion_loss_weight $MOTION_LOSS_WEIGHT \
   --depth_loss_weight $DEPTH_LOSS_WEIGHT \
@@ -186,16 +161,14 @@ accelerate launch --mixed_precision bf16 --num_processes 4 \
   --save_steps $SAVE_STEPS \
   $([ "$USE_WARP_LOSS" = true ] && echo "--use_warp_loss --warp_loss_weight $WARP_LOSS_WEIGHT --warp_loss_type $WARP_LOSS_TYPE" || echo "") \
   $([ "$USE_SPATIOTEMPORAL_DEPTH" = true ] && echo "--use_spatiotemporal_depth --spatiotemporal_depth_type $SPATIOTEMPORAL_DEPTH_TYPE" || echo "") \
+  $([ "$USE_SPATIOTEMPORAL_MOTION" = true ] && echo "--use_spatiotemporal_motion --spatiotemporal_motion_type $SPATIOTEMPORAL_MOTION_TYPE" || echo "") \
   $([ "$USE_WANDB" = true ] && echo "--use_wandb --wandb_project $WANDB_PROJECT --wandb_name $WANDB_NAME" || echo "")
 
 echo ""
 echo "=========================================================================="
-echo "Stage 1 Training Complete!"
+echo "Stage 1 Full-Res Training Complete!"
 echo "=========================================================================="
-echo "Motion and depth heads have been trained and saved to:"
+echo "Motion and depth heads saved to:"
 echo "  $OUTPUT_PATH/final/motion_head.pth"
 echo "  $OUTPUT_PATH/final/depth_head.pth"
-echo ""
-echo "Next step: Run stage 2 to fine-tune the backbone with LoRA:"
-echo "  bash train_wan22_stage2_lora.sh"
 echo "=========================================================================="

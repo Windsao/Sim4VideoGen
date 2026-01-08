@@ -26,12 +26,14 @@ from diffsynth.trainers.unified_dataset import (
 )
 from diffsynth.trainers.image_sequence_loader import LoadImageSequenceWithMotion
 from diffsynth.models.wan_video_dit_motion import (
-    MotionVectorHead, DepthHead,
+    MotionVectorHead, MotionVectorHeadFullRes,
+    DepthHead, DepthHeadFullRes,
     compute_motion_loss, compute_depth_loss, compute_warp_loss
 )
 from diffsynth.models.rgb_warp_loss import compute_rgb_warp_loss
 from diffsynth.models.spatiotemporal_depth_head import (
-    SpatioTemporalDepthHead, SpatioTemporalDepthHeadSimple
+    SpatioTemporalDepthHead, SpatioTemporalDepthHeadSimple,
+    SpatioTemporalMotionHead, SpatioTemporalMotionHeadSimple,
 )
 
 from accelerate import Accelerator
@@ -176,6 +178,8 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
         extra_inputs=None,
         max_timestep_boundary=1.0,
         min_timestep_boundary=0.0,
+        timestep_sampling: str = "uniform",
+        timestep_sampling_power: float = 2.0,
         # Motion-specific parameters
         motion_channels: int = 4,
         motion_loss_weight: float = 0.1,
@@ -198,10 +202,16 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
         # Spatio-temporal depth head parameters
         use_spatiotemporal_depth: bool = False,
         spatiotemporal_depth_type: str = "simple",
+        # Spatio-temporal motion head parameters
+        use_spatiotemporal_motion: bool = False,
+        spatiotemporal_motion_type: str = "simple",
         num_temporal_heads: int = 8,
         temporal_head_dim: int = 64,
         num_temporal_blocks: int = 2,
         temporal_pos_embed_type: str = "rope",
+        # Full-resolution head output
+        full_res_heads: bool = False,
+        full_res_upsample_mode: str = "trilinear",
         # Checkpoint loading
         motion_head_checkpoint: str = None,
         depth_head_checkpoint: str = None,
@@ -237,6 +247,8 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
 
         # Training mode
         self.training_mode = training_mode
+        self.timestep_sampling = timestep_sampling
+        self.timestep_sampling_power = timestep_sampling_power
 
         # Determine which heads to enable
         self.enable_motion = training_mode in ["lora", "both_last", "heads_only", "motion_only"]
@@ -250,6 +262,14 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
         # Depth parameters
         self.depth_loss_weight = depth_loss_weight if self.enable_depth else 0.0
         self.depth_loss_type = depth_loss_type
+
+        if self.timestep_sampling not in {"uniform", "high", "low"}:
+            raise ValueError(
+                f"Unknown timestep_sampling '{self.timestep_sampling}'. "
+                "Use one of: uniform, high, low."
+            )
+        if self.timestep_sampling_power <= 0:
+            raise ValueError("--timestep_sampling_power must be > 0.")
 
         # Warp loss parameters
         self.use_warp_loss = use_warp_loss and self.enable_depth
@@ -266,10 +286,15 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
         # Spatio-temporal depth parameters
         self.use_spatiotemporal_depth = use_spatiotemporal_depth
         self.spatiotemporal_depth_type = spatiotemporal_depth_type
+        # Spatio-temporal motion parameters
+        self.use_spatiotemporal_motion = use_spatiotemporal_motion
+        self.spatiotemporal_motion_type = spatiotemporal_motion_type
         self.num_temporal_heads = num_temporal_heads
         self.temporal_head_dim = temporal_head_dim
         self.num_temporal_blocks = num_temporal_blocks
         self.temporal_pos_embed_type = temporal_pos_embed_type
+        self.full_res_heads = full_res_heads
+        self.full_res_upsample_mode = full_res_upsample_mode
 
         # Initialize feature capture variables
         self._dit_features = None
@@ -317,13 +342,52 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
         patch_size = dit.patch_size
         eps = 1e-6
 
-        self.motion_head = MotionVectorHead(
-            dim=dim,
-            motion_channels=self.motion_channels,
-            patch_size=patch_size,
-            eps=eps,
-            output_scale=1.0,
-        )
+        if self.use_spatiotemporal_motion:
+            if self.spatiotemporal_motion_type == "full":
+                self.motion_head = SpatioTemporalMotionHead(
+                    dim=dim,
+                    motion_channels=self.motion_channels,
+                    patch_size=patch_size,
+                    num_temporal_heads=self.num_temporal_heads,
+                    temporal_head_dim=self.temporal_head_dim,
+                    num_temporal_blocks=self.num_temporal_blocks,
+                    pos_embed_type=self.temporal_pos_embed_type,
+                    eps=eps,
+                    output_scale=1.0,
+                    upsample_mode=self.full_res_upsample_mode,
+                ).to(self.pipe.device)
+            else:
+                self.motion_head = SpatioTemporalMotionHeadSimple(
+                    dim=dim,
+                    motion_channels=self.motion_channels,
+                    patch_size=patch_size,
+                    num_temporal_heads=self.num_temporal_heads,
+                    temporal_head_dim=self.temporal_head_dim,
+                    num_temporal_blocks=self.num_temporal_blocks,
+                    pos_embed_type=self.temporal_pos_embed_type,
+                    eps=eps,
+                    output_scale=1.0,
+                ).to(self.pipe.device)
+            print(f"Spatio-temporal motion head initialized ({self.spatiotemporal_motion_type})")
+        else:
+            motion_head_cls = MotionVectorHeadFullRes if self.full_res_heads else MotionVectorHead
+            if self.full_res_heads:
+                self.motion_head = motion_head_cls(
+                    dim=dim,
+                    motion_channels=self.motion_channels,
+                    patch_size=patch_size,
+                    eps=eps,
+                    output_scale=1.0,
+                    upsample_mode=self.full_res_upsample_mode,
+                )
+            else:
+                self.motion_head = motion_head_cls(
+                    dim=dim,
+                    motion_channels=self.motion_channels,
+                    patch_size=patch_size,
+                    eps=eps,
+                    output_scale=1.0,
+                )
 
         dit_dtype = next(dit.parameters()).dtype
         self.motion_head = self.motion_head.to(dtype=dit_dtype, device=self.pipe.device)
@@ -377,12 +441,22 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
             print(f"Spatio-temporal depth head initialized ({self.spatiotemporal_depth_type})")
         else:
             # Use standard depth head
-            self.depth_head = DepthHead(
-                dim=dim,
-                patch_size=patch_size,
-                eps=eps,
-                output_scale=1.0,
-            )
+            depth_head_cls = DepthHeadFullRes if self.full_res_heads else DepthHead
+            if self.full_res_heads:
+                self.depth_head = depth_head_cls(
+                    dim=dim,
+                    patch_size=patch_size,
+                    eps=eps,
+                    output_scale=1.0,
+                    upsample_mode=self.full_res_upsample_mode,
+                )
+            else:
+                self.depth_head = depth_head_cls(
+                    dim=dim,
+                    patch_size=patch_size,
+                    eps=eps,
+                    output_scale=1.0,
+                )
             self.depth_head = self.depth_head.to(device=self.pipe.device)
             print("Standard depth head initialized")
 
@@ -544,20 +618,91 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
             c=channels,
         )
 
-    def compute_motion_prediction(self, features: torch.Tensor, t_embed: torch.Tensor, grid_size: Tuple[int, int, int]) -> torch.Tensor:
-        motion_patchified = self.motion_head(features, t_embed)
-        return self._unpatchify_head_output(motion_patchified, grid_size, self.motion_channels)
+    def _upsample_motion_prediction(
+        self,
+        motion: torch.Tensor,
+        output_size: Tuple[int, int, int],
+    ) -> torch.Tensor:
+        target_f, target_h, target_w = output_size
+        source_f, source_h, source_w = motion.shape[2:]
+        if (target_f, target_h, target_w) == (source_f, source_h, source_w):
+            return motion
+        motion = F.interpolate(
+            motion,
+            size=(target_f, target_h, target_w),
+            mode=self.full_res_upsample_mode,
+            align_corners=False if self.full_res_upsample_mode in ("trilinear", "bilinear") else None,
+        )
+        if motion.shape[1] >= 2:
+            motion[:, 0] *= target_w / max(1, source_w)
+            motion[:, 1] *= target_h / max(1, source_h)
+        return motion
 
-    def compute_depth_prediction(self, features: torch.Tensor, t_embed: torch.Tensor, grid_size: Tuple[int, int, int]) -> torch.Tensor:
+    def _upsample_depth_prediction(
+        self,
+        depth: torch.Tensor,
+        output_size: Tuple[int, int, int],
+    ) -> torch.Tensor:
+        target_f, target_h, target_w = output_size
+        source_f, source_h, source_w = depth.shape[2:]
+        if (target_f, target_h, target_w) == (source_f, source_h, source_w):
+            return depth
+        return F.interpolate(
+            depth,
+            size=(target_f, target_h, target_w),
+            mode=self.full_res_upsample_mode,
+            align_corners=False if self.full_res_upsample_mode in ("trilinear", "bilinear") else None,
+        )
+
+    def compute_motion_prediction(
+        self,
+        features: torch.Tensor,
+        t_embed: torch.Tensor,
+        grid_size: Tuple[int, int, int],
+        output_size: Optional[Tuple[int, int, int]] = None,
+    ) -> torch.Tensor:
+        if self.use_spatiotemporal_motion:
+            if self.spatiotemporal_motion_type == "full":
+                motion_pred, _ = self.motion_head(
+                    features, t_embed, grid_size, output_size=output_size
+                )
+                return motion_pred
+            motion_patchified, _ = self.motion_head(features, t_embed, grid_size)
+            motion = self.motion_head.unpatchify(motion_patchified, grid_size)
+            if output_size is not None:
+                motion = self._upsample_motion_prediction(motion, output_size)
+            return motion
+
+        if output_size is not None and hasattr(self.motion_head, "predict_full_res"):
+            return self.motion_head.predict_full_res(features, t_embed, grid_size, output_size)
+        motion_patchified = self.motion_head(features, t_embed)
+        motion = self._unpatchify_head_output(motion_patchified, grid_size, self.motion_channels)
+        if output_size is not None and self.full_res_heads:
+            motion = self._upsample_motion_prediction(motion, output_size)
+        return motion
+
+    def compute_depth_prediction(
+        self,
+        features: torch.Tensor,
+        t_embed: torch.Tensor,
+        grid_size: Tuple[int, int, int],
+        output_size: Optional[Tuple[int, int, int]] = None,
+    ) -> torch.Tensor:
         if self.use_spatiotemporal_depth:
             if self.spatiotemporal_depth_type == "full":
-                depth_pred, _ = self.depth_head(features, t_embed, grid_size)
+                depth_pred, _ = self.depth_head(features, t_embed, grid_size, output_size=output_size)
                 return depth_pred
             depth_patchified, _ = self.depth_head(features, t_embed, grid_size)
-            return self.depth_head.unpatchify(depth_patchified, grid_size)
+            depth_pred = self.depth_head.unpatchify(depth_patchified, grid_size)
+            if output_size is not None:
+                depth_pred = self._upsample_depth_prediction(depth_pred, output_size)
+            return depth_pred
 
         depth_patchified = self.depth_head(features, t_embed)
-        return self._unpatchify_head_output(depth_patchified, grid_size, 1)
+        depth = self._unpatchify_head_output(depth_patchified, grid_size, 1)
+        if output_size is not None and self.full_res_heads:
+            depth = self._upsample_depth_prediction(depth, output_size)
+        return depth
 
     def forward_preprocess(self, data):
         """Preprocess data for forward pass."""
@@ -647,6 +792,25 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
         depth = (depth * 255.0).clamp(0, 255).to(torch.uint8).cpu().numpy()
         return Image.fromarray(depth, mode="L")
 
+    def _sample_timestep(self, min_id: int, max_id: int) -> torch.Tensor:
+        num_timesteps = self.pipe.scheduler.num_train_timesteps
+        min_id = max(0, min_id)
+        max_id = min(max_id, num_timesteps)
+        if max_id <= min_id:
+            max_id = min(min_id + 1, num_timesteps)
+        span = max_id - min_id
+        rand = torch.rand(1, device=self.pipe.device)
+        if self.timestep_sampling == "high":
+            rand = 1.0 - (1.0 - rand) ** self.timestep_sampling_power
+        elif self.timestep_sampling == "low":
+            rand = rand ** self.timestep_sampling_power
+        timestep_id = min_id + torch.floor(rand * span).long()
+        timestep_id = timestep_id.clamp(0, num_timesteps - 1)
+        timestep_id_cpu = timestep_id.to(device="cpu")
+        return self.pipe.scheduler.timesteps[timestep_id_cpu].to(
+            dtype=self.pipe.torch_dtype, device=self.pipe.device
+        )
+
     def forward(self, data, inputs=None):
         """Forward pass with motion and depth losses."""
         if inputs is None:
@@ -662,9 +826,7 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
         # Standard training loss computation (mirrors train_wan_with_motion.py)
         max_timestep_boundary = int(inputs.get("max_timestep_boundary", 1) * self.pipe.scheduler.num_train_timesteps)
         min_timestep_boundary = int(inputs.get("min_timestep_boundary", 0) * self.pipe.scheduler.num_train_timesteps)
-        timestep = torch.randint(min_timestep_boundary, max_timestep_boundary, (1,)).to(
-            dtype=self.pipe.torch_dtype, device=self.pipe.device
-        )
+        timestep = self._sample_timestep(min_timestep_boundary, max_timestep_boundary)
 
         inputs["latents"] = self.pipe.scheduler.add_noise(inputs["input_latents"], inputs["noise"], timestep)
         training_target = self.pipe.scheduler.training_target(inputs["input_latents"], inputs["noise"], timestep)
@@ -696,12 +858,18 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
             if t_embed is None:
                 raise RuntimeError("Failed to capture DiT timestep embedding from head hook.")
 
-            motion_pred = self.compute_motion_prediction(self._dit_features, t_embed, grid_size)
-
-            # Align shapes
-            target_motion_for_loss = target_motion.to(device=motion_pred.device, dtype=motion_pred.dtype)
+            target_motion_for_loss = target_motion.to(device=self.pipe.device, dtype=self.pipe.torch_dtype)
             if target_motion_for_loss.dim() == 4:
                 target_motion_for_loss = target_motion_for_loss.unsqueeze(0)
+            target_h, target_w = target_motion_for_loss.shape[-2:]
+            output_motion_size = (grid_size[0] * self.pipe.dit.patch_size[0], target_h, target_w)
+
+            motion_pred = self.compute_motion_prediction(
+                self._dit_features, t_embed, grid_size, output_size=output_motion_size
+            )
+
+            # Align shapes
+            target_motion_for_loss = target_motion_for_loss.to(device=motion_pred.device, dtype=motion_pred.dtype)
             if target_motion_for_loss.shape[2] == motion_pred.shape[2] - 1:
                 pad = torch.zeros_like(target_motion_for_loss[:, :, :1])
                 target_motion_for_loss = torch.cat([target_motion_for_loss, pad], dim=2)
@@ -731,12 +899,18 @@ class WAN22MotionDepthTrainingModule(DiffusionTrainingModule):
             if t_embed is None:
                 raise RuntimeError("Failed to capture DiT timestep embedding from head hook.")
 
-            depth_pred = self.compute_depth_prediction(self._dit_features, t_embed, grid_size)
-
-            # Align shapes
-            target_depth_for_loss = target_depth.to(device=depth_pred.device, dtype=depth_pred.dtype)
+            target_depth_for_loss = target_depth.to(device=self.pipe.device, dtype=self.pipe.torch_dtype)
             if target_depth_for_loss.dim() == 4:
                 target_depth_for_loss = target_depth_for_loss.unsqueeze(0)
+            target_h, target_w = target_depth_for_loss.shape[-2:]
+            output_depth_size = (grid_size[0] * self.pipe.dit.patch_size[0], target_h, target_w)
+
+            depth_pred = self.compute_depth_prediction(
+                self._dit_features, t_embed, grid_size, output_size=output_depth_size
+            )
+
+            # Align shapes
+            target_depth_for_loss = target_depth_for_loss.to(device=depth_pred.device, dtype=depth_pred.dtype)
             if target_depth_for_loss.shape[2:] != depth_pred.shape[2:]:
                 target_depth_for_loss = F.interpolate(
                     target_depth_for_loss,
@@ -1041,6 +1215,11 @@ def main():
     parser.add_argument("--rgb_warp_loss_type", type=str, default="l1", choices=["mse", "l1", "smooth_l1"])
     parser.add_argument("--rgb_warp_use_ssim", action="store_true")
     parser.add_argument("--rgb_warp_ssim_weight", type=float, default=0.85)
+    parser.add_argument("--full_res_heads", action="store_true",
+                        help="Upsample motion/depth head outputs to full video resolution")
+    parser.add_argument("--full_res_upsample_mode", type=str, default="trilinear",
+                        choices=["nearest", "trilinear", "bilinear"],
+                        help="Upsample mode for full-res motion/depth heads")
 
     # Training parameters
     parser.add_argument("--learning_rate", type=float, default=1e-5)
@@ -1058,6 +1237,10 @@ def main():
     # Spatio-temporal depth
     parser.add_argument("--use_spatiotemporal_depth", action="store_true")
     parser.add_argument("--spatiotemporal_depth_type", type=str, default="simple",
+                       choices=["simple", "full"])
+    # Spatio-temporal motion
+    parser.add_argument("--use_spatiotemporal_motion", action="store_true")
+    parser.add_argument("--spatiotemporal_motion_type", type=str, default="simple",
                        choices=["simple", "full"])
 
     args = parser.parse_args()
@@ -1212,10 +1395,14 @@ def main():
         rgb_warp_loss_type=args.rgb_warp_loss_type,
         rgb_warp_use_ssim=args.rgb_warp_use_ssim,
         rgb_warp_ssim_weight=args.rgb_warp_ssim_weight,
+        full_res_heads=args.full_res_heads,
+        full_res_upsample_mode=args.full_res_upsample_mode,
         motion_head_checkpoint=args.motion_head_checkpoint,
         depth_head_checkpoint=args.depth_head_checkpoint,
         use_spatiotemporal_depth=args.use_spatiotemporal_depth,
         spatiotemporal_depth_type=args.spatiotemporal_depth_type,
+        use_spatiotemporal_motion=args.use_spatiotemporal_motion,
+        spatiotemporal_motion_type=args.spatiotemporal_motion_type,
     )
 
     # Create optimizer

@@ -175,6 +175,11 @@ def main() -> None:
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
     parser.add_argument("--save_steps", type=int, default=500)
+    parser.add_argument("--timestep_sampling", type=str, default="uniform",
+                        choices=["uniform", "high", "low"],
+                        help="Bias timestep sampling toward higher or lower noise.")
+    parser.add_argument("--timestep_sampling_power", type=float, default=2.0,
+                        help="Power for timestep sampling bias (used for high/low).")
 
     # Wandb
     parser.add_argument("--use_wandb", action="store_true")
@@ -185,6 +190,10 @@ def main() -> None:
     # Spatio-temporal depth
     parser.add_argument("--use_spatiotemporal_depth", action="store_true")
     parser.add_argument("--spatiotemporal_depth_type", type=str, default="simple",
+                        choices=["simple", "full"])
+    # Spatio-temporal motion
+    parser.add_argument("--use_spatiotemporal_motion", action="store_true")
+    parser.add_argument("--spatiotemporal_motion_type", type=str, default="simple",
                         choices=["simple", "full"])
 
     # Saving
@@ -347,6 +356,10 @@ def main() -> None:
         depth_head_checkpoint=args.depth_head_checkpoint,
         use_spatiotemporal_depth=args.use_spatiotemporal_depth,
         spatiotemporal_depth_type=args.spatiotemporal_depth_type,
+        use_spatiotemporal_motion=args.use_spatiotemporal_motion,
+        spatiotemporal_motion_type=args.spatiotemporal_motion_type,
+        timestep_sampling=args.timestep_sampling,
+        timestep_sampling_power=args.timestep_sampling_power,
     )
 
     if args.finetune_mode == "custom":

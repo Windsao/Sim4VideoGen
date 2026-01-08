@@ -15,8 +15,8 @@ echo -e "${BLUE}Physics-IQ Benchmark Wan2.2-TI2V-5B Stage2 LoRA${NC}"
 echo -e "${BLUE}================================================${NC}"
 
 # Configuration
-OUTPUT_DIR="physics_iq_results_stage2_long_step1000"
-MODEL_NAME="wan22_ti2v_stage2_lora"
+OUTPUT_DIR="physics_iq_results_stage2_large_dataset_full_mse"
+MODEL_NAME="wan22_ti2v_stage2_layer"
 MAX_SAMPLES=""  # Leave empty for all samples, or set a number like "10"
 NUM_FRAMES=81   # 81 frames at 16fps = ~5 seconds (benchmark requirement)
 FPS=16          # Benchmark evaluates first 5 seconds
@@ -28,8 +28,10 @@ SEED=42
 DEVICE="cuda"
 WORLD_SIZE=4
 MODEL_BASE_PATH="/nyx-storage1/hanliu/world_model_ckpt"
-LORA_DIR="/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage2_spatio_depth_full_long/checkpoint-1000"
+LORA_DIR=""
 LORA_CKPT=""
+FINETUNE_DIR="/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage2_finetune_large_spatio_depth_full_mse"
+DIT_CKPT=""
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -98,6 +100,14 @@ while [[ $# -gt 0 ]]; do
             LORA_CKPT="$2"
             shift 2
             ;;
+        --finetune-dir)
+            FINETUNE_DIR="$2"
+            shift 2
+            ;;
+        --dit-checkpoint)
+            DIT_CKPT="$2"
+            shift 2
+            ;;
         --help)
             echo "Usage: $0 [options]"
             echo ""
@@ -118,8 +128,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --model-base-path DIR   Base WAN model path (default: /nyx-storage1/hanliu/world_model_ckpt)"
             echo "  --lora-dir DIR          Stage 2 final dir (default: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage2/final)"
             echo "  --lora-checkpoint FILE  Override LoRA checkpoint path"
+            echo "  --finetune-dir DIR      Stage 2 finetune output dir (default: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/full_data)"
+            echo "  --dit-checkpoint FILE   Override finetuned DiT checkpoint path (dit.pth)"
             echo "  --help                  Show this help message"
-            echo ""
             echo "Examples:"
             echo "  # Run on first 10 samples"
             echo "  $0 --max-samples 10"
@@ -143,7 +154,16 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$LORA_CKPT" ]; then
-    LORA_CKPT="${LORA_DIR}/lora_weights.pth"
+    if [ -f "${LORA_DIR}/lora_weights.pth" ]; then
+        LORA_CKPT="${LORA_DIR}/lora_weights.pth"
+    fi
+fi
+if [ -z "$DIT_CKPT" ]; then
+    if [ -f "${FINETUNE_DIR}/final/dit.pth" ]; then
+        DIT_CKPT="${FINETUNE_DIR}/final/dit.pth"
+    elif [ -f "${FINETUNE_DIR}/dit.pth" ]; then
+        DIT_CKPT="${FINETUNE_DIR}/dit.pth"
+    fi
 fi
 
 # Print configuration
@@ -151,7 +171,12 @@ echo -e "${YELLOW}Configuration:${NC}"
 echo "  Output Directory: $OUTPUT_DIR"
 echo "  Model Name: $MODEL_NAME"
 echo "  Model Base Path: $MODEL_BASE_PATH"
-echo "  LoRA Checkpoint: $LORA_CKPT"
+if [ -n "$LORA_CKPT" ]; then
+    echo "  LoRA Checkpoint: $LORA_CKPT"
+fi
+if [ -n "$DIT_CKPT" ]; then
+    echo "  Finetune DiT Checkpoint: $DIT_CKPT"
+fi
 if [ -n "$MAX_SAMPLES" ]; then
     echo "  Max Samples: $MAX_SAMPLES"
 else
@@ -179,10 +204,25 @@ if [ ! -f "$SCRIPT_PATH" ]; then
     exit 1
 fi
 
-# Check LoRA checkpoint
-if [ ! -f "$LORA_CKPT" ]; then
+# Check checkpoints
+if [ -n "$LORA_CKPT" ] && [ ! -f "$LORA_CKPT" ]; then
     echo -e "${RED}Error: LoRA checkpoint not found: $LORA_CKPT${NC}"
     echo "Use --lora-dir or --lora-checkpoint to specify the Stage 2 weights."
+    exit 1
+fi
+if [ -n "$DIT_CKPT" ] && [ ! -f "$DIT_CKPT" ]; then
+    echo -e "${RED}Error: Finetuned DiT checkpoint not found: $DIT_CKPT${NC}"
+    echo "Use --finetune-dir or --dit-checkpoint to specify the Stage 2 finetune weights."
+    exit 1
+fi
+if [ -n "$DIT_CKPT" ] && [ -d "$DIT_CKPT" ]; then
+    echo -e "${RED}Error: Finetuned DiT checkpoint is a directory: $DIT_CKPT${NC}"
+    echo "Point --dit-checkpoint to a file like final/dit.pth."
+    exit 1
+fi
+if [ -z "$LORA_CKPT" ] && [ -z "$DIT_CKPT" ]; then
+    echo -e "${RED}Error: No checkpoints provided.${NC}"
+    echo "Provide --lora-checkpoint or --dit-checkpoint."
     exit 1
 fi
 
@@ -200,11 +240,12 @@ fi
 
 # Create output and log directories
 mkdir -p "$OUTPUT_DIR"
-mkdir -p logs
+mkdir -p logs_mse
 
 echo -e "${BLUE}Starting multi-GPU inference...${NC}"
 echo ""
 
+PIDS=()
 for rank in $(seq 0 $((WORLD_SIZE-1))); do
     echo "Launching GPU $rank..."
 
@@ -212,7 +253,6 @@ for rank in $(seq 0 $((WORLD_SIZE-1))); do
         --output_dir $OUTPUT_DIR \
         --model_name $MODEL_NAME \
         --model_base_path $MODEL_BASE_PATH \
-        --lora_checkpoint $LORA_CKPT \
         --height $HEIGHT \
         --width $WIDTH \
         --num_frames $NUM_FRAMES \
@@ -224,6 +264,12 @@ for rank in $(seq 0 $((WORLD_SIZE-1))); do
         --shard_index $rank \
         --num_shards $WORLD_SIZE"
 
+    if [ -n "$LORA_CKPT" ]; then
+        CMD="$CMD --lora_checkpoint $LORA_CKPT"
+    fi
+    if [ -n "$DIT_CKPT" ]; then
+        CMD="$CMD --dit_checkpoint $DIT_CKPT"
+    fi
     if [ -n "$MAX_SAMPLES" ]; then
         CMD="$CMD --max_samples $MAX_SAMPLES"
     fi
@@ -231,10 +277,11 @@ for rank in $(seq 0 $((WORLD_SIZE-1))); do
         CMD="$CMD $RESIZE_INPUT"
     fi
 
-    CUDA_VISIBLE_DEVICES=$rank $CMD > logs/stage2_long_gpu_${rank}.log 2>&1 &
+    CUDA_VISIBLE_DEVICES=$rank $CMD > logs_mse/stage2_gpu_${rank}.log 2>&1 &
 
     PID=$!
-    echo "GPU $rank started with PID $PID (log: logs/stage2_long_gpu_${rank}.log)"
+    PIDS+=("$PID")
+    echo "GPU $rank started with PID $PID (log: logs_mse/stage2_gpu_${rank}.log)"
     sleep 2
 done
 
@@ -243,18 +290,23 @@ echo "================================================"
 echo "All GPU processes launched!"
 echo "================================================"
 echo "Monitor progress with:"
-echo "  tail -f logs/stage2_long_gpu_0.log"
-echo "  tail -f logs/stage2_long_gpu_1.log"
-echo "  tail -f logs/stage2_long_gpu_2.log"
-echo "  tail -f logs/stage2_long_gpu_3.log"
+echo "  tail -f logs_mse/stage2_gpu_0.log"
+echo "  tail -f logs_mse/stage2_gpu_1.log"
+echo "  tail -f logs_mse/stage2_gpu_2.log"
+echo "  tail -f logs_mse/stage2_gpu_3.log"
 echo ""
 echo "Or monitor all at once:"
-echo "  tail -f logs/stage2_long_gpu_*.log"
+echo "  tail -f logs_mse/stage2_gpu_*.log"
 echo ""
-echo "Check running processes:" 
+echo "Check running processes:"
 echo "  ps aux | grep '$SCRIPT_PATH'"
 echo ""
-echo "To wait for all processes to complete:"
-echo "  wait"
+echo "Waiting for all processes to complete..."
 echo ""
 echo "To kill all processes, run: pkill -f '$SCRIPT_PATH'"
+
+for PID in "${PIDS[@]}"; do
+    wait "$PID"
+done
+
+echo "All processes finished."

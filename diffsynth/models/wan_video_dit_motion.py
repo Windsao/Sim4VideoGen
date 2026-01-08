@@ -23,6 +23,43 @@ from .wan_video_dit import (
     flash_attention, modulate, rope_apply
 )
 
+def _upsample_motion_to_size(
+    motion: torch.Tensor,
+    output_size: Tuple[int, int, int],
+    upsample_mode: str,
+) -> torch.Tensor:
+    target_f, target_h, target_w = output_size
+    source_f, source_h, source_w = motion.shape[2:]
+    if (target_f, target_h, target_w) == (source_f, source_h, source_w):
+        return motion
+    motion = F.interpolate(
+        motion,
+        size=(target_f, target_h, target_w),
+        mode=upsample_mode,
+        align_corners=False if upsample_mode in ("trilinear", "bilinear") else None,
+    )
+    if motion.shape[1] >= 2:
+        motion[:, 0] *= target_w / max(1, source_w)
+        motion[:, 1] *= target_h / max(1, source_h)
+    return motion
+
+
+def _upsample_depth_to_size(
+    depth: torch.Tensor,
+    output_size: Tuple[int, int, int],
+    upsample_mode: str,
+) -> torch.Tensor:
+    target_f, target_h, target_w = output_size
+    source_f, source_h, source_w = depth.shape[2:]
+    if (target_f, target_h, target_w) == (source_f, source_h, source_w):
+        return depth
+    return F.interpolate(
+        depth,
+        size=(target_f, target_h, target_w),
+        mode=upsample_mode,
+        align_corners=False if upsample_mode in ("trilinear", "bilinear") else None,
+    )
+
 
 class MotionVectorHead(nn.Module):
     """
@@ -85,6 +122,47 @@ class MotionVectorHead(nn.Module):
         return x * self.output_scale
 
 
+class MotionVectorHeadFullRes(MotionVectorHead):
+    """
+    Motion head that upsamples predictions to full video resolution.
+    """
+
+    def __init__(
+        self,
+        dim: int,
+        motion_channels: int = 4,
+        patch_size: Tuple[int, int, int] = (1, 2, 2),
+        eps: float = 1e-6,
+        output_scale: float = 1.0,
+        upsample_mode: str = "trilinear",
+    ):
+        super().__init__(
+            dim=dim,
+            motion_channels=motion_channels,
+            patch_size=patch_size,
+            eps=eps,
+            output_scale=output_scale,
+        )
+        self.upsample_mode = upsample_mode
+
+    def predict_full_res(
+        self,
+        x: torch.Tensor,
+        t_mod: torch.Tensor,
+        grid_size: Tuple[int, int, int],
+        output_size: Tuple[int, int, int],
+    ) -> torch.Tensor:
+        patchified = super().forward(x, t_mod)
+        f, h, w = grid_size
+        motion = rearrange(
+            patchified, 'b (f h w) (x y z c) -> b c (f x) (h y) (w z)',
+            f=f, h=h, w=w,
+            x=self.patch_size[0], y=self.patch_size[1], z=self.patch_size[2],
+            c=self.motion_channels,
+        )
+        return _upsample_motion_to_size(motion, output_size, self.upsample_mode)
+
+
 class DepthHead(nn.Module):
     """
     Head for predicting depth (distance to camera) from DiT features.
@@ -141,6 +219,46 @@ class DepthHead(nn.Module):
 
         return x * self.output_scale
 
+
+class DepthHeadFullRes(DepthHead):
+    """
+    Depth head that upsamples predictions to full video resolution.
+    """
+
+    def __init__(
+        self,
+        dim: int,
+        depth_channels: int = 1,
+        patch_size: Tuple[int, int, int] = (1, 2, 2),
+        eps: float = 1e-6,
+        output_scale: float = 1.0,
+        upsample_mode: str = "trilinear",
+    ):
+        super().__init__(
+            dim=dim,
+            depth_channels=depth_channels,
+            patch_size=patch_size,
+            eps=eps,
+            output_scale=output_scale,
+        )
+        self.upsample_mode = upsample_mode
+
+    def predict_full_res(
+        self,
+        x: torch.Tensor,
+        t_mod: torch.Tensor,
+        grid_size: Tuple[int, int, int],
+        output_size: Tuple[int, int, int],
+    ) -> torch.Tensor:
+        patchified = super().forward(x, t_mod)
+        f, h, w = grid_size
+        depth = rearrange(
+            patchified, 'b (f h w) (x y z c) -> b c (f x) (h y) (w z)',
+            f=f, h=h, w=w,
+            x=self.patch_size[0], y=self.patch_size[1], z=self.patch_size[2],
+            c=self.depth_channels,
+        )
+        return _upsample_depth_to_size(depth, output_size, self.upsample_mode)
 
 class WanModelWithMotion(WanModel):
     """

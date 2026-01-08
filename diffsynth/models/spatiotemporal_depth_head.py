@@ -388,12 +388,14 @@ class SpatioTemporalDepthHead(nn.Module):
         max_frames: int = 256,
         output_scale: float = 1.0,
         eps: float = 1e-6,
+        upsample_mode: str = "trilinear",
     ):
         super().__init__()
         self.dim = dim
         self.patch_size = patch_size
         self.features = features
         self.output_scale = output_scale
+        self.upsample_mode = upsample_mode
 
         # Layer norm before processing
         self.norm = nn.LayerNorm(dim, eps=eps, elementwise_affine=False)
@@ -522,6 +524,7 @@ class SpatioTemporalDepthHead(nn.Module):
         t_mod: torch.Tensor,
         grid_size: Tuple[int, int, int],
         cached_hidden_states: Optional[List[List[Tuple[torch.Tensor, torch.Tensor]]]] = None,
+        output_size: Optional[Tuple[int, int, int]] = None,
     ) -> Tuple[torch.Tensor, List[List[Tuple[torch.Tensor, torch.Tensor]]]]:
         """
         Forward pass for depth prediction.
@@ -605,7 +608,18 @@ class SpatioTemporalDepthHead(nn.Module):
         target_w = w * self.patch_size[2]
         if H_out != target_h or W_out != target_w:
             depth = F.interpolate(depth, size=(f * self.patch_size[0], target_h, target_w),
-                                 mode='trilinear', align_corners=True)
+                                 mode=self.upsample_mode,
+                                 align_corners=True if self.upsample_mode in ("trilinear", "bilinear") else None)
+
+        if output_size is not None:
+            target_f, target_h, target_w = output_size
+            if depth.shape[2:] != (target_f, target_h, target_w):
+                depth = F.interpolate(
+                    depth,
+                    size=(target_f, target_h, target_w),
+                    mode=self.upsample_mode,
+                    align_corners=True if self.upsample_mode in ("trilinear", "bilinear") else None,
+                )
 
         return depth * self.output_scale, new_cached_states
 
@@ -724,4 +738,263 @@ class SpatioTemporalDepthHeadSimple(nn.Module):
             f=f, h=h, w=w,
             x=self.patch_size[0], y=self.patch_size[1], z=self.patch_size[2],
             c=self.depth_channels
+        )
+
+
+class SpatioTemporalMotionHead(nn.Module):
+    """
+    Spatio-Temporal Motion Head inspired by Video-Depth-Anything.
+
+    This mirrors SpatioTemporalDepthHead but outputs motion vectors.
+    """
+    def __init__(
+        self,
+        dim: int,
+        motion_channels: int = 4,
+        patch_size: Tuple[int, int, int] = (1, 2, 2),
+        features: int = 256,
+        num_temporal_heads: int = 8,
+        temporal_head_dim: int = 64,
+        num_temporal_blocks: int = 1,
+        use_bn: bool = False,
+        pos_embed_type: str = "rope",
+        max_frames: int = 256,
+        output_scale: float = 1.0,
+        eps: float = 1e-6,
+        upsample_mode: str = "trilinear",
+    ):
+        super().__init__()
+        self.dim = dim
+        self.motion_channels = motion_channels
+        self.patch_size = patch_size
+        self.features = features
+        self.output_scale = output_scale
+        self.upsample_mode = upsample_mode
+
+        self.norm = nn.LayerNorm(dim, eps=eps, elementwise_affine=False)
+        self.modulation = nn.Parameter(torch.zeros(1, 2, dim))
+
+        self.proj_layers = nn.ModuleList([
+            nn.Conv2d(dim, features, kernel_size=1),
+            nn.Conv2d(dim, features, kernel_size=1),
+            nn.Conv2d(dim, features, kernel_size=1),
+            nn.Conv2d(dim, features, kernel_size=1),
+        ])
+
+        self.temporal_modules = nn.ModuleList([
+            TemporalModule(
+                in_channels=features,
+                num_heads=num_temporal_heads,
+                head_dim=temporal_head_dim,
+                num_blocks=num_temporal_blocks,
+                pos_embed_type=pos_embed_type,
+                max_frames=max_frames,
+                zero_init=True,
+            )
+            for _ in range(4)
+        ])
+
+        self.resize_ops = nn.ModuleList([
+            nn.Identity(),
+            nn.ConvTranspose2d(features, features, kernel_size=2, stride=2),
+            nn.Sequential(
+                nn.ConvTranspose2d(features, features, kernel_size=2, stride=2),
+                nn.ConvTranspose2d(features, features, kernel_size=2, stride=2),
+            ),
+            nn.Sequential(
+                nn.ConvTranspose2d(features, features, kernel_size=2, stride=2),
+                nn.ConvTranspose2d(features, features, kernel_size=2, stride=2),
+                nn.ConvTranspose2d(features, features, kernel_size=2, stride=2),
+            ),
+        ])
+
+        self.fusion_blocks = nn.ModuleList([
+            FeatureFusionBlock(features, use_bn),
+            FeatureFusionBlock(features, use_bn),
+            FeatureFusionBlock(features, use_bn),
+            FeatureFusionBlock(features, use_bn),
+        ])
+
+        self.output_conv = nn.Sequential(
+            ConvBlock(features, features // 2, use_bn),
+            nn.Conv2d(features // 2, motion_channels, kernel_size=1),
+        )
+
+        nn.init.xavier_uniform_(self.output_conv[-1].weight, gain=0.01)
+        if self.output_conv[-1].bias is not None:
+            nn.init.zeros_(self.output_conv[-1].bias)
+
+    def _reshape_features_to_spatial(
+        self,
+        x: torch.Tensor,
+        grid_size: Tuple[int, int, int],
+    ) -> torch.Tensor:
+        f, h, w = grid_size
+        B = x.shape[0]
+        x = x.view(B, f, h, w, -1)
+        x = rearrange(x, 'b f h w d -> (b f) d h w')
+        return x
+
+    def _reshape_to_video(
+        self,
+        x: torch.Tensor,
+        batch_size: int,
+        num_frames: int,
+    ) -> torch.Tensor:
+        return rearrange(x, '(b f) c h w -> b c f h w', b=batch_size, f=num_frames)
+
+    def _reshape_from_video(
+        self,
+        x: torch.Tensor,
+    ) -> torch.Tensor:
+        return rearrange(x, 'b c f h w -> (b f) c h w')
+
+    def _upsample_motion(
+        self,
+        motion: torch.Tensor,
+        target_size: Tuple[int, int, int],
+    ) -> torch.Tensor:
+        target_f, target_h, target_w = target_size
+        source_f, source_h, source_w = motion.shape[2:]
+        if (target_f, target_h, target_w) == (source_f, source_h, source_w):
+            return motion
+        motion = F.interpolate(
+            motion,
+            size=(target_f, target_h, target_w),
+            mode=self.upsample_mode,
+            align_corners=True if self.upsample_mode in ("trilinear", "bilinear") else None,
+        )
+        if motion.shape[1] >= 2:
+            motion[:, 0] *= target_w / max(1, source_w)
+            motion[:, 1] *= target_h / max(1, source_h)
+        return motion
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        t_mod: torch.Tensor,
+        grid_size: Tuple[int, int, int],
+        cached_hidden_states: Optional[List[List[Tuple[torch.Tensor, torch.Tensor]]]] = None,
+        output_size: Optional[Tuple[int, int, int]] = None,
+    ) -> Tuple[torch.Tensor, List[List[Tuple[torch.Tensor, torch.Tensor]]]]:
+        f, h, w = grid_size
+        B = x.shape[0]
+
+        if len(t_mod.shape) == 3:
+            shift, scale = (self.modulation.unsqueeze(0).to(dtype=t_mod.dtype, device=t_mod.device) + t_mod.unsqueeze(2)).chunk(2, dim=2)
+            x = self.norm(x) * (1 + scale.squeeze(2)) + shift.squeeze(2)
+        else:
+            shift, scale = (self.modulation.to(dtype=t_mod.dtype, device=t_mod.device) + t_mod).chunk(2, dim=1)
+            x = self.norm(x) * (1 + scale) + shift
+
+        x_spatial = self._reshape_features_to_spatial(x, grid_size)
+
+        layer_outputs = []
+        for i, (proj, resize) in enumerate(zip(self.proj_layers, self.resize_ops)):
+            feat = proj(x_spatial)
+            if i > 0:
+                scale_factor = 1.0 / (2 ** i)
+                feat = F.interpolate(feat, scale_factor=scale_factor, mode='bilinear', align_corners=True)
+            layer_outputs.append(feat)
+
+        new_cached_states = []
+        temporal_outputs = []
+        for i, (feat, temporal_module) in enumerate(zip(layer_outputs, self.temporal_modules)):
+            feat_video = self._reshape_to_video(feat, B, f)
+            cached = cached_hidden_states[i] if cached_hidden_states else None
+            feat_video, new_cached = temporal_module(feat_video, f, cached)
+            new_cached_states.append(new_cached)
+            feat = self._reshape_from_video(feat_video)
+            temporal_outputs.append(feat)
+
+        fused = temporal_outputs[3]
+        for i in range(2, -1, -1):
+            fused = self.fusion_blocks[i](fused, temporal_outputs[i])
+
+        motion = self.output_conv(fused)
+        motion = self._reshape_to_video(motion, B, f)
+
+        target_f = f * self.patch_size[0]
+        target_h = h * self.patch_size[1]
+        target_w = w * self.patch_size[2]
+        if output_size is not None:
+            target_f, target_h, target_w = output_size
+
+        motion = self._upsample_motion(motion, (target_f, target_h, target_w))
+
+        return motion * self.output_scale, new_cached_states
+
+
+class SpatioTemporalMotionHeadSimple(nn.Module):
+    """
+    Simplified Spatio-Temporal Motion Head.
+    """
+    def __init__(
+        self,
+        dim: int,
+        motion_channels: int = 4,
+        patch_size: Tuple[int, int, int] = (1, 2, 2),
+        num_temporal_heads: int = 8,
+        temporal_head_dim: int = 64,
+        num_temporal_blocks: int = 2,
+        pos_embed_type: str = "rope",
+        max_frames: int = 256,
+        output_scale: float = 1.0,
+        eps: float = 1e-6,
+    ):
+        super().__init__()
+        self.dim = dim
+        self.motion_channels = motion_channels
+        self.patch_size = patch_size
+        self.output_scale = output_scale
+
+        self.norm = nn.LayerNorm(dim, eps=eps, elementwise_affine=False)
+        self.modulation = nn.Parameter(torch.zeros(1, 2, dim))
+
+        self.temporal_module = TemporalModule(
+            in_channels=dim,
+            num_heads=num_temporal_heads,
+            head_dim=temporal_head_dim,
+            num_blocks=num_temporal_blocks,
+            pos_embed_type=pos_embed_type,
+            max_frames=max_frames,
+            zero_init=True,
+        )
+
+        self.head = nn.Linear(dim, motion_channels * math.prod(patch_size))
+
+        nn.init.xavier_uniform_(self.head.weight, gain=0.01)
+        if self.head.bias is not None:
+            nn.init.zeros_(self.head.bias)
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        t_mod: torch.Tensor,
+        grid_size: Tuple[int, int, int],
+        cached_hidden_states: Optional[List[Tuple[torch.Tensor, torch.Tensor]]] = None,
+    ) -> Tuple[torch.Tensor, List[Tuple[torch.Tensor, torch.Tensor]]]:
+        f, h, w = grid_size
+
+        if len(t_mod.shape) == 3:
+            shift, scale = (self.modulation.unsqueeze(0).to(dtype=t_mod.dtype, device=t_mod.device) + t_mod.unsqueeze(2)).chunk(2, dim=2)
+            x = self.norm(x) * (1 + scale.squeeze(2)) + shift.squeeze(2)
+        else:
+            shift, scale = (self.modulation.to(dtype=t_mod.dtype, device=t_mod.device) + t_mod).chunk(2, dim=1)
+            x = self.norm(x) * (1 + scale) + shift
+
+        x = rearrange(x, 'b (f h w) d -> b d f h w', f=f, h=h, w=w)
+        x, new_cached = self.temporal_module(x, f, cached_hidden_states)
+        x = rearrange(x, 'b d f h w -> b (f h w) d')
+
+        motion = self.head(x) * self.output_scale
+        return motion, new_cached
+
+    def unpatchify(self, x: torch.Tensor, grid_size: Tuple[int, int, int]) -> torch.Tensor:
+        f, h, w = grid_size
+        return rearrange(
+            x, 'b (f h w) (x y z c) -> b c (f x) (h y) (w z)',
+            f=f, h=h, w=w,
+            x=self.patch_size[0], y=self.patch_size[1], z=self.patch_size[2],
+            c=self.motion_channels
         )
