@@ -1,11 +1,10 @@
 #!/bin/bash
 
 set -euo pipefail
-
 # bash run_physics_iq_inference_stage2_layer_parallel.sh --world-size 4
 PHYSICS_IQ_ROOT="/nyx-storage1/hanliu/physics-IQ-benchmark"
-OUTPUT_DIR="physics_iq_results_stage2_large_dataset"
-MODEL_NAME="wan22_ti2v_stage2_layer"
+OUTPUT_DIR="physics_iq_results_cogvideox_i2v" # physics_iq_results_stage2_light_continue
+MODEL_NAME="cogvideox_i2v_5b"
 INPUT_FOLDER=""
 DESCRIPTIONS_FILE="descriptions/descriptions.csv"
 

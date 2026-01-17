@@ -18,8 +18,8 @@ echo -e "${BLUE}================================================${NC}"
 OUTPUT_DIR="physics_iq_results_stage2_large_dataset_full_mse"
 MODEL_NAME="wan22_ti2v_stage2_layer"
 MAX_SAMPLES=""  # Leave empty for all samples, or set a number like "10"
-NUM_FRAMES=81   # 81 frames at 16fps = ~5 seconds (benchmark requirement)
-FPS=16          # Benchmark evaluates first 5 seconds
+NUM_FRAMES=51   # 81 frames at 16fps = ~5 seconds (benchmark requirement)
+FPS=10          # Benchmark evaluates first 5 seconds
 HEIGHT=480
 WIDTH=832
 CFG_SCALE=7.0
@@ -240,7 +240,7 @@ fi
 
 # Create output and log directories
 mkdir -p "$OUTPUT_DIR"
-mkdir -p logs_mse
+mkdir -p logs_light
 
 echo -e "${BLUE}Starting multi-GPU inference...${NC}"
 echo ""
@@ -277,11 +277,11 @@ for rank in $(seq 0 $((WORLD_SIZE-1))); do
         CMD="$CMD $RESIZE_INPUT"
     fi
 
-    CUDA_VISIBLE_DEVICES=$rank $CMD > logs_mse/stage2_gpu_${rank}.log 2>&1 &
+    CUDA_VISIBLE_DEVICES=$rank $CMD > logs_light/stage2_gpu_${rank}.log 2>&1 &
 
     PID=$!
     PIDS+=("$PID")
-    echo "GPU $rank started with PID $PID (log: logs_mse/stage2_gpu_${rank}.log)"
+    echo "GPU $rank started with PID $PID (log: logs_light/stage2_gpu_${rank}.log)"
     sleep 2
 done
 
@@ -290,13 +290,13 @@ echo "================================================"
 echo "All GPU processes launched!"
 echo "================================================"
 echo "Monitor progress with:"
-echo "  tail -f logs_mse/stage2_gpu_0.log"
-echo "  tail -f logs_mse/stage2_gpu_1.log"
-echo "  tail -f logs_mse/stage2_gpu_2.log"
-echo "  tail -f logs_mse/stage2_gpu_3.log"
+echo "  tail -f logs_light/stage2_gpu_0.log"
+echo "  tail -f logs_light/stage2_gpu_1.log"
+echo "  tail -f logs_light/stage2_gpu_2.log"
+echo "  tail -f logs_light/stage2_gpu_3.log"
 echo ""
 echo "Or monitor all at once:"
-echo "  tail -f logs_mse/stage2_gpu_*.log"
+echo "  tail -f logs_light/stage2_gpu_*.log"
 echo ""
 echo "Check running processes:"
 echo "  ps aux | grep '$SCRIPT_PATH'"

@@ -22,7 +22,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 MODEL_BASE_PATH="/nyx-storage1/hanliu/world_model_ckpt/Wan-AI"
 
 # Training data paths
-DATASET_BASE_PATH="/nyx-storage1/hanliu/Sim_Physics/TestOutput"
+DATASET_BASE_PATH="/nyx-storage1/hanliu/Sim_Physics/PhysicsIQv2"
 DATASET_METADATA_PATH="/home/mzh1800/DiffSynth-Studio/data/sim_physics_metadata.csv"
 
 # Video dimensions (must match Stage 1)
@@ -110,8 +110,8 @@ GRADIENT_ACCUMULATION_STEPS=8
 SAVE_STEPS=500
 
 # Loss weights
-MOTION_LOSS_WEIGHT=0.5
-DEPTH_LOSS_WEIGHT=0.5
+MOTION_LOSS_WEIGHT=0.1
+DEPTH_LOSS_WEIGHT=0.1
 USE_WARP_LOSS=true
 WARP_LOSS_WEIGHT=0.1
 WARP_LOSS_TYPE="mse"

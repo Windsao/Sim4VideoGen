@@ -1,37 +1,39 @@
 #!/bin/bash
 
-# Physics-IQ Benchmark Inference Script for Wan2.2-TI2V-5B Stage 2 LoRA
-# This script runs the Wan2.2-TI2V-5B model with Stage 2 LoRA weights
+# Physics-IQ Benchmark Inference Script for CogVideoX-5b-I2V (diffusers)
+export HF_HOME="/nyx-storage1/hanliu/hf"
+export TRANSFORMERS_CACHE="$HF_HOME/transformers"
+export HF_DATASETS_CACHE="$HF_HOME/datasets"
+export HUGGINGFACE_HUB_CACHE="$HF_HOME/hub"
 
-# Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 echo -e "${BLUE}================================================${NC}"
-echo -e "${BLUE}Physics-IQ Benchmark Wan2.2-TI2V-5B Stage2 LoRA${NC}"
+echo -e "${BLUE}Physics-IQ CogVideoX-5b-I2V (diffusers)${NC}"
 echo -e "${BLUE}================================================${NC}"
 
-# Configuration
-OUTPUT_DIR="physics_iq_results_stage2_large_dataset"
-MODEL_NAME="wan22_ti2v_stage2_lora"
-MAX_SAMPLES=""  # Leave empty for all samples, or set a number like "10"
-NUM_FRAMES=81   # 81 frames at 16fps = ~5 seconds (benchmark requirement)
-FPS=16          # Benchmark evaluates first 5 seconds
+OUTPUT_DIR="physics_iq_results_cogvideox_i2v"
+MODEL_NAME="cogvideox_i2v_5b"
+MODEL_ID="THUDM/CogVideoX-5b-I2V"
+MAX_SAMPLES=""
+NUM_FRAMES=51
+FPS=10
 HEIGHT=480
 WIDTH=832
-CFG_SCALE=7.0
+CFG_SCALE=6.0
 INFERENCE_STEPS=50
 SEED=42
 DEVICE="cuda"
 WORLD_SIZE=4
-MODEL_BASE_PATH="/nyx-storage1/hanliu/world_model_ckpt"
-LORA_DIR="/nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage2_lora_large_custom_pretrained/final"
-LORA_CKPT=""
+HALF_MODE=""
+ENABLE_OFFLOAD=""
+VAE_TILING=""
+VAE_SLICING=""
 
-# Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         --max-samples)
@@ -44,6 +46,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --model-name)
             MODEL_NAME="$2"
+            shift 2
+            ;;
+        --model-id)
+            MODEL_ID="$2"
             shift 2
             ;;
         --num-frames)
@@ -86,25 +92,30 @@ while [[ $# -gt 0 ]]; do
             WORLD_SIZE="$2"
             shift 2
             ;;
-        --model-base-path)
-            MODEL_BASE_PATH="$2"
+        --half)
+            HALF_MODE="$2"
             shift 2
             ;;
-        --lora-dir)
-            LORA_DIR="$2"
-            shift 2
+        --enable-offload)
+            ENABLE_OFFLOAD="--enable_offload"
+            shift
             ;;
-        --lora-checkpoint)
-            LORA_CKPT="$2"
-            shift 2
+        --vae-tiling)
+            VAE_TILING="--vae_tiling"
+            shift
+            ;;
+        --vae-slicing)
+            VAE_SLICING="--vae_slicing"
+            shift
             ;;
         --help)
             echo "Usage: $0 [options]"
             echo ""
             echo "Options:"
             echo "  --max-samples N         Process only N samples (default: all)"
-            echo "  --output-dir DIR        Output directory (default: physics_iq_results_stage2)"
-            echo "  --model-name NAME       Model name for output folder (default: wan22_ti2v_stage2_lora)"
+            echo "  --output-dir DIR        Output directory (default: physics_iq_results_cogvideox_i2v)"
+            echo "  --model-name NAME       Model name for output folder (default: cogvideox_i2v_5b)"
+            echo "  --model-id ID           HuggingFace model ID (default: THUDM/CogVideoX-5b-I2V)"
             echo "  --num-frames N          Number of frames to generate (default: 81)"
             echo "  --fps N                 Output video FPS (default: 16)"
             echo "  --height N              Video height (default: 480)"
@@ -115,23 +126,11 @@ while [[ $# -gt 0 ]]; do
             echo "  --resize-input          Resize input images to output dimensions"
             echo "  --device DEVICE         Device to use (default: cuda)"
             echo "  --world-size N          Number of GPUs to use (default: 4)"
-            echo "  --model-base-path DIR   Base WAN model path (default: /nyx-storage1/hanliu/world_model_ckpt)"
-            echo "  --lora-dir DIR          Stage 2 final dir (default: /nyx-storage1/hanliu/world_model_ckpt/Wan-AI/wan22_ti2v_stage2/final)"
-            echo "  --lora-checkpoint FILE  Override LoRA checkpoint path"
+            echo "  --half first|second     Process first or second 50% of the dataset"
+            echo "  --enable-offload        Enable sequential CPU offload"
+            echo "  --vae-tiling            Enable VAE tiling"
+            echo "  --vae-slicing           Enable VAE slicing"
             echo "  --help                  Show this help message"
-            echo ""
-            echo "Examples:"
-            echo "  # Run on first 10 samples"
-            echo "  $0 --max-samples 10"
-            echo ""
-            echo "  # Run with custom output directory and model name"
-            echo "  $0 --output-dir my_results --model-name wan22_stage2_custom"
-            echo ""
-            echo "  # Run with a custom Stage 2 directory"
-            echo "  $0 --lora-dir /path/to/wan22_ti2v_stage2/final"
-            echo ""
-            echo "  # Multi-GPU: Launch 4 GPUs"
-            echo "  $0 --world-size 4"
             exit 0
             ;;
         *)
@@ -142,16 +141,10 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [ -z "$LORA_CKPT" ]; then
-    LORA_CKPT="${LORA_DIR}/lora_weights.pth"
-fi
-
-# Print configuration
 echo -e "${YELLOW}Configuration:${NC}"
 echo "  Output Directory: $OUTPUT_DIR"
 echo "  Model Name: $MODEL_NAME"
-echo "  Model Base Path: $MODEL_BASE_PATH"
-echo "  LoRA Checkpoint: $LORA_CKPT"
+echo "  Model ID: $MODEL_ID"
 if [ -n "$MAX_SAMPLES" ]; then
     echo "  Max Samples: $MAX_SAMPLES"
 else
@@ -164,29 +157,32 @@ echo "  Inference Steps: $INFERENCE_STEPS"
 echo "  Seed: $SEED"
 echo "  Device: $DEVICE"
 echo "  World Size: $WORLD_SIZE"
+if [ -n "$HALF_MODE" ]; then
+    echo "  Half Mode: $HALF_MODE"
+fi
 if [ -n "$RESIZE_INPUT" ]; then
     echo "  Resize Input: Yes"
 else
     echo "  Resize Input: No"
 fi
+if [ -n "$ENABLE_OFFLOAD" ]; then
+    echo "  Offload: Enabled"
+fi
+if [ -n "$VAE_TILING" ]; then
+    echo "  VAE Tiling: Enabled"
+fi
+if [ -n "$VAE_SLICING" ]; then
+    echo "  VAE Slicing: Enabled"
+fi
 echo ""
 
-# Check if Python script exists
-SCRIPT_PATH="inference_physics_iq_wan22.py"
+SCRIPT_PATH="inference_physics_iq_cogvideox_i2v.py"
 if [ ! -f "$SCRIPT_PATH" ]; then
     echo -e "${RED}Error: $SCRIPT_PATH not found!${NC}"
     echo "Please ensure the inference script is in the current directory."
     exit 1
 fi
 
-# Check LoRA checkpoint
-if [ ! -f "$LORA_CKPT" ]; then
-    echo -e "${RED}Error: LoRA checkpoint not found: $LORA_CKPT${NC}"
-    echo "Use --lora-dir or --lora-checkpoint to specify the Stage 2 weights."
-    exit 1
-fi
-
-# Check GPU availability
 if [ "$DEVICE" == "cuda" ]; then
     if ! nvidia-smi &> /dev/null; then
         echo -e "${RED}Warning: NVIDIA GPU not detected. Falling back to CPU.${NC}"
@@ -198,21 +194,38 @@ if [ "$DEVICE" == "cuda" ]; then
     fi
 fi
 
-# Create output and log directories
 mkdir -p "$OUTPUT_DIR"
-mkdir -p logs
+mkdir -p logs_mse
 
 echo -e "${BLUE}Starting multi-GPU inference...${NC}"
 echo ""
 
+PIDS=()
 for rank in $(seq 0 $((WORLD_SIZE-1))); do
     echo "Launching GPU $rank..."
+
+    SHARD_INDEX=$rank
+    NUM_SHARDS=$WORLD_SIZE
+    if [ -n "$HALF_MODE" ]; then
+        case "$HALF_MODE" in
+            first|0)
+                SHARD_INDEX=$rank
+                ;;
+            second|1)
+                SHARD_INDEX=$((rank + WORLD_SIZE))
+                ;;
+            *)
+                echo -e "${RED}Invalid --half value: $HALF_MODE (use first|second|0|1)${NC}"
+                exit 1
+                ;;
+        esac
+        NUM_SHARDS=$((WORLD_SIZE * 2))
+    fi
 
     CMD="python $SCRIPT_PATH \
         --output_dir $OUTPUT_DIR \
         --model_name $MODEL_NAME \
-        --model_base_path $MODEL_BASE_PATH \
-        --lora_checkpoint $LORA_CKPT \
+        --model_id $MODEL_ID \
         --height $HEIGHT \
         --width $WIDTH \
         --num_frames $NUM_FRAMES \
@@ -221,8 +234,8 @@ for rank in $(seq 0 $((WORLD_SIZE-1))); do
         --num_inference_steps $INFERENCE_STEPS \
         --seed $SEED \
         --device $DEVICE \
-        --shard_index $rank \
-        --num_shards $WORLD_SIZE"
+        --shard_index $SHARD_INDEX \
+        --num_shards $NUM_SHARDS"
 
     if [ -n "$MAX_SAMPLES" ]; then
         CMD="$CMD --max_samples $MAX_SAMPLES"
@@ -230,11 +243,21 @@ for rank in $(seq 0 $((WORLD_SIZE-1))); do
     if [ -n "$RESIZE_INPUT" ]; then
         CMD="$CMD $RESIZE_INPUT"
     fi
+    if [ -n "$ENABLE_OFFLOAD" ]; then
+        CMD="$CMD $ENABLE_OFFLOAD"
+    fi
+    if [ -n "$VAE_TILING" ]; then
+        CMD="$CMD $VAE_TILING"
+    fi
+    if [ -n "$VAE_SLICING" ]; then
+        CMD="$CMD $VAE_SLICING"
+    fi
 
-    CUDA_VISIBLE_DEVICES=$rank $CMD > logs/stage2_long_gpu_${rank}.log 2>&1 &
+    CUDA_VISIBLE_DEVICES=$rank $CMD > logs_mse/cogvideox_gpu_${rank}.log 2>&1 &
 
     PID=$!
-    echo "GPU $rank started with PID $PID (log: logs/stage2_long_gpu_${rank}.log)"
+    PIDS+=("$PID")
+    echo "GPU $rank started with PID $PID (log: logs_mse/cogvideox_gpu_${rank}.log)"
     sleep 2
 done
 
@@ -243,18 +266,23 @@ echo "================================================"
 echo "All GPU processes launched!"
 echo "================================================"
 echo "Monitor progress with:"
-echo "  tail -f logs/stage2_long_gpu_0.log"
-echo "  tail -f logs/stage2_long_gpu_1.log"
-echo "  tail -f logs/stage2_long_gpu_2.log"
-echo "  tail -f logs/stage2_long_gpu_3.log"
+echo "  tail -f logs_mse/cogvideox_gpu_0.log"
+echo "  tail -f logs_mse/cogvideox_gpu_1.log"
+echo "  tail -f logs_mse/cogvideox_gpu_2.log"
+echo "  tail -f logs_mse/cogvideox_gpu_3.log"
 echo ""
 echo "Or monitor all at once:"
-echo "  tail -f logs/stage2_long_gpu_*.log"
+echo "  tail -f logs_mse/cogvideox_gpu_*.log"
 echo ""
-echo "Check running processes:" 
+echo "Check running processes:"
 echo "  ps aux | grep '$SCRIPT_PATH'"
 echo ""
-echo "To wait for all processes to complete:"
-echo "  wait"
+echo "Waiting for all processes to complete..."
 echo ""
 echo "To kill all processes, run: pkill -f '$SCRIPT_PATH'"
+
+for PID in "${PIDS[@]}"; do
+    wait "$PID"
+done
+
+echo "All processes finished."
